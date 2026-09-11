@@ -1,0 +1,23 @@
+{
+  "source": "CodeBuddy result; accounting scope not verified",
+  "usage": {
+    "input_tokens": 170398,
+    "output_tokens": 1007,
+    "cache_creation_input_tokens": 23198,
+    "cache_read_input_tokens": 147200,
+    "cache_creation": null,
+    "server_tool_use": null,
+    "service_tier": null
+  },
+  "modelUsage": {
+    "deepseek-v4.1-flash": {
+      "inputTokens": 0,
+      "outputTokens": 459,
+      "cacheReadInputTokens": 72832,
+      "cacheCreationInputTokens": 1894,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "reported_cost_usd": 0
+}

@@ -1,0 +1,70 @@
+{
+  "task_id": "2026-09-11-repeat-lifecycle-01-codebuddy-1-normal",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/2026-09-11-repeat-lifecycle-01-codebuddy-1-normal",
+  "backend": "codebuddy",
+  "executable": "/Users/dev/.local/share/codebuddy/versions/2.149.0/codebuddy",
+  "model": "deepseek-v4.1-flash",
+  "allow": [
+    "tags.py"
+  ],
+  "session_id": "bee98415-61bd-4004-ad36-73b539b42f41",
+  "session_confirmed": true,
+  "attempt": 2,
+  "status": "awaiting_review",
+  "permission_mode": "full",
+  "controller": {
+    "pid": 13179,
+    "parent": 12688,
+    "group": 12688,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:12:27 2026"
+  },
+  "worker": {
+    "pid": 13186,
+    "parent": 13179,
+    "group": 13186,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:12:27 2026"
+  },
+  "started_at": 1789107147.806323,
+  "budget_seconds": 120.0,
+  "last_event": {
+    "elapsed_s": 16.442,
+    "kind": "result",
+    "subtype": "success",
+    "error": false
+  },
+  "attempt_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-codebuddy-1-normal/attempts/0002",
+  "error": null,
+  "known_processes": [
+    {
+      "pid": 13186,
+      "parent": 13179,
+      "group": 13186,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:12:27 2026"
+    },
+    {
+      "pid": 13195,
+      "parent": 13186,
+      "group": 13186,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:12:28 2026"
+    },
+    {
+      "pid": 13459,
+      "parent": 1,
+      "group": 13186,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:12:29 2026"
+    }
+  ],
+  "worker_exit": 0,
+  "elapsed_s": 16.573,
+  "changes": [
+    "tags.py"
+  ],
+  "out_of_scope": [],
+  "cleanup_required": [],
+  "ended_at": 1789107164.2977622
+}

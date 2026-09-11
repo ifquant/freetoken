@@ -1,0 +1,54 @@
+[
+  {
+    "sessionUpdate": "tool_call",
+    "toolCallId": "call_00_5mv85qRHhKxUhJgwlTQg3323",
+    "title": "bash",
+    "kind": "other",
+    "status": "in_progress",
+    "rawInput": {
+      "command": "/opt/homebrew/bin/python3 -B slow_operation.py start",
+      "description": "Run slow operation once in foreground",
+      "workdir": "/Users/dev/workspace2/freetoken/experiments/workspaces/dsh-cancel-v1"
+    }
+  },
+  {
+    "sessionUpdate": "tool_call_update",
+    "toolCallId": "call_00_5mv85qRHhKxUhJgwlTQg3323",
+    "status": "failed",
+    "content": [
+      {
+        "type": "content",
+        "content": {
+          "type": "text",
+          "text": "Error: tool call aborted"
+        }
+      }
+    ]
+  },
+  {
+    "sessionUpdate": "tool_call",
+    "toolCallId": "call_00_U7iWYr2sGVwQmbkjsFKi0126",
+    "title": "bash",
+    "kind": "other",
+    "status": "in_progress",
+    "rawInput": {
+      "command": "/opt/homebrew/bin/python3 -B slow_operation.py finish",
+      "description": "Run finish once in foreground",
+      "workdir": "/Users/dev/workspace2/freetoken/experiments/workspaces/dsh-cancel-v1"
+    }
+  },
+  {
+    "sessionUpdate": "tool_call_update",
+    "toolCallId": "call_00_U7iWYr2sGVwQmbkjsFKi0126",
+    "status": "completed",
+    "content": [
+      {
+        "type": "content",
+        "content": {
+          "type": "text",
+          "text": "Finished once\n"
+        }
+      }
+    ]
+  }
+]

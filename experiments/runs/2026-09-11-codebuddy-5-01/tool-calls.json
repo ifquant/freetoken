@@ -1,0 +1,9 @@
+[
+  {
+    "name": "Bash",
+    "input": {
+      "command": "/opt/homebrew/bin/python3 -B slow_operation.py start",
+      "description": "Run slow_operation.py start once in foreground"
+    }
+  }
+]

@@ -1,0 +1,47 @@
+{"elapsed_s": 3.204, "kind": "initialized", "session_id": "5ca5347c-b47d-4ad9-8166-aeb92ae42d61", "model": "deepseek-v4.1-flash"}
+{"elapsed_s": 6.986, "kind": "tool_started", "name": "Bash"}
+{"elapsed_s": 6.986, "kind": "tool_finished", "error": false}
+{"elapsed_s": 9.624, "kind": "tool_started", "name": "Read"}
+{"elapsed_s": 9.646, "kind": "tool_started", "name": "Read"}
+{"elapsed_s": 9.649, "kind": "tool_started", "name": "Read"}
+{"elapsed_s": 9.651, "kind": "tool_finished", "error": false}
+{"elapsed_s": 9.654, "kind": "tool_finished", "error": false}
+{"elapsed_s": 9.659, "kind": "tool_finished", "error": false}
+{"elapsed_s": 13.516, "kind": "tool_started", "name": "Bash"}
+{"elapsed_s": 13.568, "kind": "tool_finished", "error": false}
+{"elapsed_s": 17.62, "kind": "tool_started", "name": "Write"}
+{"elapsed_s": 17.621, "kind": "tool_finished", "error": false}
+{"elapsed_s": 20.399, "kind": "tool_started", "name": "Bash"}
+{"elapsed_s": 20.433, "kind": "tool_finished", "error": false}
+{"elapsed_s": 25.447, "kind": "tool_started", "name": "Bash"}
+{"elapsed_s": 25.481, "kind": "tool_finished", "error": false}
+{"elapsed_s": 28.35, "kind": "tool_started", "name": "Bash"}
+{"elapsed_s": 28.389, "kind": "tool_finished", "error": false}
+{"elapsed_s": 35.281, "kind": "result", "subtype": "success", "error": false}
+{"task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/usage-review-02-codebuddy", "status": "awaiting_review", "session_id": "5ca5347c-b47d-4ad9-8166-aeb92ae42d61", "attempt": 1, "report": "/Users/dev/workspace2/freetoken/experiments/raw/usage-review-02-codebuddy/attempts/0001/report.md", "error": null}
+needs_work
+{"elapsed_s": 2.215, "kind": "initialized", "session_id": "5ca5347c-b47d-4ad9-8166-aeb92ae42d61", "model": "deepseek-v4.1-flash"}
+{"elapsed_s": 7.133, "kind": "tool_started", "name": "Edit"}
+{"elapsed_s": 7.137, "kind": "tool_finished", "error": false}
+{"elapsed_s": 10.973, "kind": "tool_started", "name": "Read"}
+{"elapsed_s": 10.976, "kind": "tool_finished", "error": false}
+{"elapsed_s": 14.167, "kind": "tool_started", "name": "Bash"}
+{"elapsed_s": 14.233, "kind": "tool_finished", "error": false}
+{"elapsed_s": 18.867, "kind": "tool_started", "name": "Bash"}
+{"elapsed_s": 18.928, "kind": "tool_finished", "error": false}
+{"elapsed_s": 25.974, "kind": "result", "subtype": "success", "error": false}
+{"task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/usage-review-02-codebuddy", "status": "awaiting_review", "session_id": "5ca5347c-b47d-4ad9-8166-aeb92ae42d61", "attempt": 2, "report": "/Users/dev/workspace2/freetoken/experiments/raw/usage-review-02-codebuddy/attempts/0002/report.md", "error": null}
+accepted
+{"elapsed_s": 3.823, "kind": "initialized", "session_id": "87308acc-b090-4bc9-879a-0e0faa59010e", "model": "deepseek-v4.1-flash"}
+{"elapsed_s": 7.202, "kind": "tool_started", "name": "Read"}
+{"elapsed_s": 7.217, "kind": "tool_finished", "error": false}
+{"elapsed_s": 14.411, "kind": "result", "subtype": "success", "error": false}
+{"task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/usage-review-02-codebuddy-oneshot", "status": "awaiting_review", "session_id": "87308acc-b090-4bc9-879a-0e0faa59010e", "attempt": 1, "report": "/Users/dev/workspace2/freetoken/experiments/raw/usage-review-02-codebuddy-oneshot/attempts/0001/report.md", "error": null}
+accepted
+{"error": "Session is closed or one-shot; create a new task instead"}
+{"session_closed": true, "at": 1789108257.900865, "removed_raw": ["attempts/0001/raw", "attempts/0002/raw"], "backend_history": "not deleted; CodeBuddy one-shot disables persistence"}
+{"session_closed": true, "at": 1789108258.1072168, "removed_raw": ["attempts/0001/raw", "attempts/0002/raw"], "backend_history": "not deleted; CodeBuddy one-shot disables persistence"}
+{"error": "Session is closed or one-shot; create a new task instead"}
+{"session_closed": true, "at": 1789108258.3771122, "removed_raw": ["attempts/0001/raw"], "backend_history": "not deleted; CodeBuddy one-shot disables persistence"}
+{"session_closed": true, "at": 1789108258.585441, "removed_raw": ["attempts/0001/raw"], "backend_history": "not deleted; CodeBuddy one-shot disables persistence"}
+{"error": "Session is closed or one-shot; create a new task instead"}

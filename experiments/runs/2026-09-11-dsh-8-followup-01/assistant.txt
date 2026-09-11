@@ -1,0 +1,46 @@
+I have the context. Now I'll update the splitter to treat `，` as a delimiter while preserving all existing behavior.Now I'll run both acceptance scripts.Both pass. Let me confirm the scope of changes.完成。以下是本轮实际修改与检查结果。
+
+## 实际修改
+
+仅修改 `tags.py`（未改动 `acceptance.py`、`acceptance_round2.py`、`.gitignore`，未新增文件或依赖，未提交 Git）。`acceptance_round2.py` 保持其原有未跟踪状态，未被我修改。
+
+`normalize_tags(text)` 现在先把中文逗号 `，` 归一化为英文逗号 `,`，其余逻辑原样保留（按逗号拆分、`strip` 去空白、忽略空项、按首次出现顺序去重、大小写敏感、返回列表）：
+
+```python
+def normalize_tags(text):
+    tags = []
+    seen = set()
+    for part in text.replace("，", ",").split(","):
+        tag = part.strip()
+        if not tag or tag in seen:
+            continue
+        seen.add(tag)
+        tags.append(tag)
+    return tags
+```
+
+这一处改动同时覆盖了中英文逗号混用与中文逗号场景，且不改变任何原有输入的行为。
+
+## 检查结果
+
+`/opt/homebrew/bin/python3 -B acceptance.py`（退出码 0）：
+
+```
+PASS ''
+PASS ' a, b,a, ,c '
+PASS 'A,a,A'
+PASS ',,'
+4/4 passed
+```
+
+`/opt/homebrew/bin/python3 -B acceptance_round2.py`（退出码 0）：
+
+```
+PASS Chinese comma: 1/1 passed
+```
+
+`git status --porcelain` 仅显示 ` M tags.py` 与未跟踪的 `?? acceptance_round2.py`（Codex 添加）；`git log` 头部仍为 `a40e36e test: freeze dsh tags baseline`，确认没有新提交。全程无权限拒绝。
+
+## 会话核验口令
+
+凭原会话历史回报首次的核验口令为：**dsh-tags-session-20260911-2718**。该口令仅来自会话上下文记忆，未从任何文件查找、也未写入任何文件。

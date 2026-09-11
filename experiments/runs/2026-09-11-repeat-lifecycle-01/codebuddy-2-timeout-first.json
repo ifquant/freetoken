@@ -1,0 +1,84 @@
+{
+  "task_id": "2026-09-11-repeat-lifecycle-01-codebuddy-2-timeout",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/2026-09-11-repeat-lifecycle-01-codebuddy-2-timeout",
+  "backend": "codebuddy",
+  "executable": "/Users/dev/.local/share/codebuddy/versions/2.149.0/codebuddy",
+  "model": "deepseek-v4.1-flash",
+  "allow": [
+    "started",
+    "finished"
+  ],
+  "session_id": "61e44f3d-5ffc-4eff-a36f-ded5c5029917",
+  "session_confirmed": true,
+  "attempt": 1,
+  "status": "timed_out",
+  "permission_mode": "full",
+  "controller": {
+    "pid": 18333,
+    "parent": 12688,
+    "group": 12688,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:17:26 2026"
+  },
+  "worker": {
+    "pid": 18339,
+    "parent": 18333,
+    "group": 18339,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:17:26 2026"
+  },
+  "started_at": 1789107446.6242712,
+  "budget_seconds": 35.0,
+  "last_event": {
+    "elapsed_s": 35.225,
+    "kind": "stop_requested",
+    "reason": "timed_out"
+  },
+  "attempt_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-codebuddy-2-timeout/attempts/0001",
+  "error": null,
+  "known_processes": [
+    {
+      "pid": 18339,
+      "parent": 18333,
+      "group": 18339,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:17:26 2026"
+    },
+    {
+      "pid": 18348,
+      "parent": 18339,
+      "group": 18339,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:17:27 2026"
+    },
+    {
+      "pid": 18596,
+      "parent": 1,
+      "group": 18339,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:17:28 2026"
+    },
+    {
+      "pid": 18658,
+      "parent": 18339,
+      "group": 18658,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:17:34 2026"
+    },
+    {
+      "pid": 18659,
+      "parent": 18658,
+      "group": 18658,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:17:34 2026"
+    }
+  ],
+  "elapsed_s": 35.42,
+  "ended_at": 1789107481.973443,
+  "worker_exit": 0,
+  "changes": [
+    "started"
+  ],
+  "out_of_scope": [],
+  "cleanup_required": []
+}

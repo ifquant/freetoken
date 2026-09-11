@@ -1,0 +1,9 @@
+{
+  "SKILL.md": "a44d6f50c2db08e22d417bde1db9b3127df6a0a1ba8fa37a8e321631849e351b",
+  "README.md": "89f0419b152caf5012b7eba27432ab0a729e3e4cef12891ef32f48506e3a3037",
+  "scripts/test_freetoken.py": "011e9940af3a806f29ae050a1a68b428e24568048a685bd24a808b3b61a6ff58",
+  "scripts/test_acp_stdio.py": "d33e6851d75390c6ee6e1db52378c27b277481132a96870a260f8e4af258b3c5",
+  "scripts/freetoken.py": "a8c16de15ba689a730913aae1b93810cf6bc393073ea4e1e91e2529a5d326056",
+  "scripts/acp_stdio.py": "802ae388333dccd0b0bd669e454f4c87edaca350d998c7677afbd9e12e026a54",
+  "experiments/runs/2026-09-11-usage-review-02/check.py": "c6bf24d3653d7bb13fb0b8e554e57c55f1aa65edeb360794df663686bd3da4ab"
+}

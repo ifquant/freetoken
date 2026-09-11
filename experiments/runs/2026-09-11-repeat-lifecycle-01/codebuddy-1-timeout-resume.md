@@ -1,0 +1,1 @@
+继续原会话：检查 started 已存在，只调用 python3 -B slow_operation.py finish 完成剩余部分。不得重新 start，不修改脚本。

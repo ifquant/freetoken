@@ -1,0 +1,9 @@
+{"elapsed_s": 3.158, "kind": "initialized", "session_id": "49e59f49-48bf-4383-beda-02e48caf03a2", "model": "deepseek-v4.1-flash"}
+{"elapsed_s": 8.022, "kind": "tool_started", "name": "Bash"}
+{"elapsed_s": 8.037, "kind": "tool_finished", "error": false}
+{"elapsed_s": 12.426, "kind": "tool_started", "name": "Bash"}
+{"elapsed_s": 12.495, "kind": "tool_finished", "error": false}
+{"elapsed_s": 17.163, "kind": "tool_started", "name": "Bash"}
+{"elapsed_s": 17.203, "kind": "tool_finished", "error": false}
+{"elapsed_s": 21.543, "kind": "result", "subtype": "success", "error": false}
+{"task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/runner-cancel-codebuddy", "status": "awaiting_review", "session_id": "49e59f49-48bf-4383-beda-02e48caf03a2", "attempt": 2, "report": "/Users/dev/workspace2/freetoken/experiments/raw/runner-cancel-codebuddy/attempts/0002/report.md", "error": null}

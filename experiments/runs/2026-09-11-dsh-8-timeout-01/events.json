@@ -1,0 +1,50 @@
+[
+  {
+    "elapsed_s": 3.636,
+    "kind": "usage_update",
+    "session_id": "6fb7a840-284d-4bb5-bbf5-f2d98e580971"
+  },
+  {
+    "elapsed_s": 3.636,
+    "kind": "tool_call",
+    "session_id": "6fb7a840-284d-4bb5-bbf5-f2d98e580971",
+    "title": "bash",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 13.902,
+    "kind": "tool_call_update",
+    "session_id": "6fb7a840-284d-4bb5-bbf5-f2d98e580971",
+    "title": null,
+    "status": "failed"
+  },
+  {
+    "elapsed_s": 55.332,
+    "kind": "usage_update",
+    "session_id": "6fb7a840-284d-4bb5-bbf5-f2d98e580971"
+  },
+  {
+    "elapsed_s": 55.332,
+    "kind": "tool_call",
+    "session_id": "6fb7a840-284d-4bb5-bbf5-f2d98e580971",
+    "title": "bash",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 55.403,
+    "kind": "tool_call_update",
+    "session_id": "6fb7a840-284d-4bb5-bbf5-f2d98e580971",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 59.0,
+    "kind": "agent_message_chunk",
+    "session_id": "6fb7a840-284d-4bb5-bbf5-f2d98e580971"
+  },
+  {
+    "elapsed_s": 59.0,
+    "kind": "usage_update",
+    "session_id": "6fb7a840-284d-4bb5-bbf5-f2d98e580971"
+  }
+]

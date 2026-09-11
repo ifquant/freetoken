@@ -1,0 +1,15 @@
+{
+  "frozen_files_unchanged": {
+    "tags.py": false,
+    "acceptance.py": true,
+    ".gitignore": true
+  },
+  "remaining_process_group_members": [],
+  "tool_counts": {
+    "Bash": 5,
+    "Edit": 1,
+    "Read": 10
+  },
+  "usage_events_available": 28,
+  "final_result_file_exists": false
+}

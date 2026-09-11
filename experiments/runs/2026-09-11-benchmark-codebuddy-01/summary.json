@@ -1,0 +1,153 @@
+{
+  "rows": [
+    {
+      "name": "coarse",
+      "backend": "codebuddy",
+      "model": "deepseek-v4.1-flash",
+      "fixture": "logrollup-v1",
+      "granularity": "1 work package",
+      "fine_phase1_readonly": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 32.714,
+          "error": null
+        }
+      ],
+      "passed": true,
+      "total_s": 33.2046607080847,
+      "acceptance_and_record_s": 0.1524782080668956,
+      "report_bytes": 1031,
+      "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-codebuddy-01-coarse"
+    },
+    {
+      "name": "fine",
+      "backend": "codebuddy",
+      "model": "deepseek-v4.1-flash",
+      "fixture": "logrollup-v1",
+      "granularity": "3 turns",
+      "fine_phase1_readonly": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 28.066,
+          "error": null
+        },
+        {
+          "attempt": 2,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 16.719,
+          "error": null
+        },
+        {
+          "attempt": 3,
+          "exit_code": 2,
+          "status": "failed",
+          "elapsed_s": 16.799,
+          "error": "RuntimeError: CodeBuddy did not return a successful final result; inspect attempt raw logs"
+        }
+      ],
+      "passed": false,
+      "total_s": 62.230772541835904,
+      "acceptance_and_record_s": 0.05882779182866216,
+      "report_bytes": 2964,
+      "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-codebuddy-01-fine"
+    },
+    {
+      "name": "serial-log",
+      "backend": "codebuddy",
+      "model": "deepseek-v4.1-flash",
+      "fixture": "logrollup-v1",
+      "granularity": "1 work package",
+      "fine_phase1_readonly": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 29.68,
+          "error": null
+        }
+      ],
+      "passed": true,
+      "total_s": 30.080080416984856,
+      "acceptance_and_record_s": 0.1579161670524627,
+      "report_bytes": 1246,
+      "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-codebuddy-01-serial-log"
+    },
+    {
+      "name": "serial-path",
+      "backend": "codebuddy",
+      "model": "deepseek-v4.1-flash",
+      "fixture": "pathlist-v1",
+      "granularity": "1 work package",
+      "fine_phase1_readonly": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 31.039,
+          "error": null
+        }
+      ],
+      "passed": true,
+      "total_s": 31.447102582780644,
+      "acceptance_and_record_s": 0.1695557909552008,
+      "report_bytes": 961,
+      "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-codebuddy-01-serial-path"
+    },
+    {
+      "name": "parallel-log",
+      "backend": "codebuddy",
+      "model": "deepseek-v4.1-flash",
+      "fixture": "logrollup-v1",
+      "granularity": "1 work package",
+      "fine_phase1_readonly": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 24.797,
+          "error": null
+        }
+      ],
+      "passed": true,
+      "total_s": 25.17085887491703,
+      "acceptance_and_record_s": 0.15819124993868172,
+      "report_bytes": 967,
+      "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-codebuddy-01-parallel-log"
+    },
+    {
+      "name": "parallel-path",
+      "backend": "codebuddy",
+      "model": "deepseek-v4.1-flash",
+      "fixture": "pathlist-v1",
+      "granularity": "1 work package",
+      "fine_phase1_readonly": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 24.958,
+          "error": null
+        }
+      ],
+      "passed": true,
+      "total_s": 25.385694958036765,
+      "acceptance_and_record_s": 0.20842166687361896,
+      "report_bytes": 822,
+      "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-codebuddy-01-parallel-path"
+    }
+  ],
+  "serial_pair_s": 61.653980625094846,
+  "parallel_pair_s": 25.45160166709684,
+  "limits": "One sample per scenario, fresh sessions not guaranteed cold cache; no billing inference."
+}

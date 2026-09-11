@@ -1,0 +1,98 @@
+{
+  "task_id": "2026-09-11-benchmark-codebuddy-01-coarse",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/2026-09-11-benchmark-codebuddy-01-coarse",
+  "backend": "codebuddy",
+  "executable": "/Users/dev/.local/share/codebuddy/versions/2.149.0/codebuddy",
+  "model": "deepseek-v4.1-flash",
+  "allow": [
+    "rollup.py"
+  ],
+  "session_id": "71923ca2-1ace-4003-b70e-b2123be5b7cd",
+  "session_confirmed": true,
+  "attempt": 1,
+  "status": "awaiting_review",
+  "permission_mode": "full",
+  "controller": {
+    "pid": 8178,
+    "parent": 8172,
+    "group": 8172,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:04:18 2026"
+  },
+  "worker": {
+    "pid": 8184,
+    "parent": 8178,
+    "group": 8184,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:04:18 2026"
+  },
+  "started_at": 1789106658.710492,
+  "budget_seconds": 180.0,
+  "last_event": {
+    "elapsed_s": 32.462,
+    "kind": "result",
+    "subtype": "success",
+    "error": false
+  },
+  "attempt_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-codebuddy-01-coarse/attempts/0001",
+  "error": null,
+  "known_processes": [
+    {
+      "pid": 8184,
+      "parent": 8178,
+      "group": 8184,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:04:18 2026"
+    },
+    {
+      "pid": 8192,
+      "parent": 8184,
+      "group": 8184,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:04:19 2026"
+    },
+    {
+      "pid": 8306,
+      "parent": 8192,
+      "group": 8184,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:04:19 2026"
+    },
+    {
+      "pid": 8307,
+      "parent": 8306,
+      "group": 8184,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:04:19 2026"
+    },
+    {
+      "pid": 8317,
+      "parent": 8307,
+      "group": 8184,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:04:20 2026"
+    },
+    {
+      "pid": 8318,
+      "parent": 8317,
+      "group": 8184,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:04:20 2026"
+    },
+    {
+      "pid": 8444,
+      "parent": 1,
+      "group": 8184,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:04:20 2026"
+    }
+  ],
+  "worker_exit": 0,
+  "elapsed_s": 32.714,
+  "changes": [
+    "rollup.py"
+  ],
+  "out_of_scope": [],
+  "cleanup_required": [],
+  "ended_at": 1789106691.3526258
+}

@@ -1,0 +1,338 @@
+[
+  {
+    "message_id": "01a08ec34ff67793a18ed8660f10f615",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": null,
+      "cache_read_input_tokens": null,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec34ff67793a18ed8660f10f615",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec34ff67793a18ed8660f10f615",
+    "usage": {
+      "input_tokens": 11164,
+      "output_tokens": 298,
+      "cache_creation_input_tokens": 8348,
+      "cache_read_input_tokens": 2816,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec6-4f32-7aa1-adef-9ce89db99d23",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec64f6476428f102caf70e31bd6",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": null,
+      "cache_read_input_tokens": null,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec64f6476428f102caf70e31bd6",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec64f6476428f102caf70e31bd6",
+    "usage": {
+      "input_tokens": 12042,
+      "output_tokens": 228,
+      "cache_creation_input_tokens": 906,
+      "cache_read_input_tokens": 11136,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec659d17208a2b9e5cd198d1ae6",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": null,
+      "cache_read_input_tokens": null,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec659d17208a2b9e5cd198d1ae6",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec659d17208a2b9e5cd198d1ae6",
+    "usage": {
+      "input_tokens": 12400,
+      "output_tokens": 102,
+      "cache_creation_input_tokens": 240,
+      "cache_read_input_tokens": 12160,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec664257713bf0e9657eb952d79",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": null,
+      "cache_read_input_tokens": null,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec664257713bf0e9657eb952d79",
+    "usage": {
+      "input_tokens": 12534,
+      "output_tokens": 84,
+      "cache_creation_input_tokens": 246,
+      "cache_read_input_tokens": 12288,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec66d5e770fbeaddb58393a5b08",
+    "usage": {
+      "input_tokens": 12748,
+      "output_tokens": 65,
+      "cache_creation_input_tokens": 204,
+      "cache_read_input_tokens": 12544,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec67abe7ab4a019d71570bc80d2",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": null,
+      "cache_read_input_tokens": null,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec67abe7ab4a019d71570bc80d2",
+    "usage": {
+      "input_tokens": 13084,
+      "output_tokens": 87,
+      "cache_creation_input_tokens": 412,
+      "cache_read_input_tokens": 12672,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec6852275f3a308a76e1a0ad942",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": null,
+      "cache_read_input_tokens": null,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec6852275f3a308a76e1a0ad942",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec6852275f3a308a76e1a0ad942",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec6852275f3a308a76e1a0ad942",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec6852275f3a308a76e1a0ad942",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec6852275f3a308a76e1a0ad942",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec6852275f3a308a76e1a0ad942",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec6852275f3a308a76e1a0ad942",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec6852275f3a308a76e1a0ad942",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec6852275f3a308a76e1a0ad942",
+    "usage": {
+      "input_tokens": 13301,
+      "output_tokens": 1109,
+      "cache_creation_input_tokens": 245,
+      "cache_read_input_tokens": 13056,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec69bfc7de9941b026d833865f2",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": null,
+      "cache_read_input_tokens": null,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec69bfc7de9941b026d833865f2",
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  },
+  {
+    "message_id": "01a08ec69bfc7de9941b026d833865f2",
+    "usage": {
+      "input_tokens": 14638,
+      "output_tokens": 528,
+      "cache_creation_input_tokens": 302,
+      "cache_read_input_tokens": 14336,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  }
+]

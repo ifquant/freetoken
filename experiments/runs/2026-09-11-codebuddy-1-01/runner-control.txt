@@ -1,0 +1,7 @@
+Positive control with a temporary lookup stub, not a candidate solution.
+exit_code: 0
+PASS ''
+PASS ' a, b,a, ,c '
+PASS 'A,a,A'
+PASS ',,'
+4/4 passed

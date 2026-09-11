@@ -1,0 +1,22 @@
+[
+  {
+    "argv": [
+      "/opt/homebrew/bin/python3",
+      "-B",
+      "acceptance.py"
+    ],
+    "exit_code": 0,
+    "stdout": "PASS ''\nPASS ' a, b,a, ,c '\nPASS 'A,a,A'\nPASS ',,'\n4/4 passed\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/opt/homebrew/bin/python3",
+      "-B",
+      "acceptance_round2.py"
+    ],
+    "exit_code": 0,
+    "stdout": "PASS Chinese comma: 1/1 passed\n",
+    "stderr": ""
+  }
+]

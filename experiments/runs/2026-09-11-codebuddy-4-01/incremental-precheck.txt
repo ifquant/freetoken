@@ -1,0 +1,2 @@
+exit_code: 1
+FAIL Chinese comma: expected ['a', 'b'], got ['a，b', 'a']

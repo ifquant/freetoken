@@ -1,0 +1,109 @@
+[
+  {
+    "elapsed_s": 2.413,
+    "type": "system",
+    "subtype": "init",
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "model": "deepseek-v4.1-flash",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 2.421,
+    "type": "system",
+    "subtype": "status",
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 2.421,
+    "type": "file-history-snapshot",
+    "subtype": null,
+    "process_alive": true,
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 5.397,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 5.398,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Bash"
+    ]
+  },
+  {
+    "elapsed_s": 5.433,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 9.903,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 11.913,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 11.925,
+    "type": "result",
+    "subtype": "success",
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "is_error": false,
+    "duration_ms": 9510,
+    "duration_api_ms": 9510,
+    "num_turns": 52,
+    "total_cost_usd": 0,
+    "usage": {
+      "input_tokens": 144630,
+      "output_tokens": 3122,
+      "cache_creation_input_tokens": 18550,
+      "cache_read_input_tokens": 126080,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    },
+    "modelUsage": {
+      "deepseek-v4.1-flash": {
+        "inputTokens": 0,
+        "outputTokens": 621,
+        "cacheReadInputTokens": 35072,
+        "cacheCreationInputTokens": 7647,
+        "contextWindow": 1000000,
+        "maxOutputTokens": 128000
+      }
+    },
+    "message_model": null,
+    "tool_names": []
+  }
+]

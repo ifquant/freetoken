@@ -1,0 +1,106 @@
+{
+  "task_id": "runner-cancel-codebuddy",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/runner-cancel-codebuddy",
+  "backend": "codebuddy",
+  "executable": "/Users/dev/.local/share/codebuddy/versions/2.149.0/codebuddy",
+  "model": "deepseek-v4.1-flash",
+  "allow": [
+    "started",
+    "finished"
+  ],
+  "session_id": "49e59f49-48bf-4383-beda-02e48caf03a2",
+  "session_confirmed": true,
+  "attempt": 2,
+  "status": "awaiting_review",
+  "permission_mode": "full",
+  "controller": {
+    "pid": 7459,
+    "parent": 6967,
+    "group": 6967,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:02:00 2026"
+  },
+  "worker": {
+    "pid": 7464,
+    "parent": 7459,
+    "group": 7464,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:02:00 2026"
+  },
+  "started_at": 1789106520.47305,
+  "budget_seconds": 120.0,
+  "last_event": {
+    "elapsed_s": 21.543,
+    "kind": "result",
+    "subtype": "success",
+    "error": false
+  },
+  "attempt_dir": "/Users/dev/workspace2/freetoken/experiments/raw/runner-cancel-codebuddy/attempts/0002",
+  "error": null,
+  "known_processes": [
+    {
+      "pid": 7464,
+      "parent": 7459,
+      "group": 7464,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:02:00 2026"
+    },
+    {
+      "pid": 7629,
+      "parent": 7613,
+      "group": 7464,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:02:01 2026"
+    },
+    {
+      "pid": 7471,
+      "parent": 7464,
+      "group": 7464,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:02:01 2026"
+    },
+    {
+      "pid": 7631,
+      "parent": 7629,
+      "group": 7464,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:02:01 2026"
+    },
+    {
+      "pid": 7612,
+      "parent": 7471,
+      "group": 7464,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:02:01 2026"
+    },
+    {
+      "pid": 7613,
+      "parent": 7612,
+      "group": 7464,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:02:01 2026"
+    },
+    {
+      "pid": 7731,
+      "parent": 7471,
+      "group": 7464,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:02:02 2026"
+    },
+    {
+      "pid": 7750,
+      "parent": 7464,
+      "group": 7464,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:02:03 2026"
+    }
+  ],
+  "worker_exit": 0,
+  "elapsed_s": 21.825,
+  "changes": [
+    "finished"
+  ],
+  "out_of_scope": [],
+  "cleanup_required": [],
+  "ended_at": 1789106542.2145941
+}

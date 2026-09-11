@@ -1,0 +1,11 @@
+{
+  "pid": 3171,
+  "elapsed_s": 10.317202041856945,
+  "exit_code": 0,
+  "checkpoint": null,
+  "checkpoint_observed_s": null,
+  "cancel_sent_s": null,
+  "stop_confirmed_s": null,
+  "cleanup": [],
+  "finished_exists": true
+}

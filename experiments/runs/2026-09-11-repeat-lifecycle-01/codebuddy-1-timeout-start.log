@@ -1,0 +1,10 @@
+{"elapsed_s": 2.141, "kind": "initialized", "session_id": "ec0f2f0d-4ec5-444b-ba2f-0dee035cb756", "model": "deepseek-v4.1-flash"}
+{"elapsed_s": 5.183, "kind": "tool_started", "name": "Bash"}
+{"elapsed_s": 5.199, "kind": "tool_finished", "error": false}
+{"elapsed_s": 9.104, "kind": "tool_started", "name": "Read"}
+{"elapsed_s": 9.106, "kind": "tool_started", "name": "Read"}
+{"elapsed_s": 9.107, "kind": "tool_finished", "error": false}
+{"elapsed_s": 9.108, "kind": "tool_finished", "error": false}
+{"elapsed_s": 13.501, "kind": "tool_started", "name": "Bash"}
+{"elapsed_s": 35.147, "kind": "stop_requested", "reason": "timed_out"}
+{"task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-codebuddy-1-timeout", "status": "timed_out", "session_id": "ec0f2f0d-4ec5-444b-ba2f-0dee035cb756", "attempt": 1, "report": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-codebuddy-1-timeout/attempts/0001/report.md", "error": null}

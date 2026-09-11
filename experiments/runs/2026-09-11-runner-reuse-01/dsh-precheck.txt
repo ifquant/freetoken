@@ -1,0 +1,6 @@
+exit_code: 1
+Traceback (most recent call last):
+  File "/Users/dev/workspace2/freetoken/experiments/workspaces/reuse-dsh-pathlist-v1/checks.py", line 21, in <module>
+    assert collect_paths(root, ['py', '.py']) == ['sub/b.py', 'z.py']
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

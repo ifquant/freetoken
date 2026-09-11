@@ -1,0 +1,22 @@
+{
+  "name": "serial-log",
+  "backend": "codebuddy",
+  "model": "deepseek-v4.1-flash",
+  "fixture": "logrollup-v1",
+  "granularity": "1 work package",
+  "fine_phase1_readonly": null,
+  "attempts": [
+    {
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "awaiting_review",
+      "elapsed_s": 29.68,
+      "error": null
+    }
+  ],
+  "passed": true,
+  "total_s": 30.080080416984856,
+  "acceptance_and_record_s": 0.1579161670524627,
+  "report_bytes": 1246,
+  "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-codebuddy-01-serial-log"
+}

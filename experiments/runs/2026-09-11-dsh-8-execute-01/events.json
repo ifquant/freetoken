@@ -1,0 +1,140 @@
+[
+  {
+    "elapsed_s": 4.594,
+    "update": "agent_message_chunk"
+  },
+  {
+    "elapsed_s": 4.594,
+    "update": "usage_update"
+  },
+  {
+    "elapsed_s": 4.594,
+    "update": "tool_call",
+    "id": "call_00_p9nryo5uaczmldlw1Vrs5671",
+    "title": "bash",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 4.618,
+    "update": "tool_call_update",
+    "id": "call_00_p9nryo5uaczmldlw1Vrs5671",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 4.619,
+    "update": "tool_call",
+    "id": "call_01_2sRm5BVKcfwP4ioxWx467943",
+    "title": "read",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 4.619,
+    "update": "tool_call",
+    "id": "call_02_k5lDhSfflxEXsFF20WCe5716",
+    "title": "read",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 4.619,
+    "update": "tool_call",
+    "id": "call_03_epgHZEAgE3J6pjyLdIHf4450",
+    "title": "read",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 4.633,
+    "update": "tool_call_update",
+    "id": "call_01_2sRm5BVKcfwP4ioxWx467943",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 4.635,
+    "update": "tool_call_update",
+    "id": "call_02_k5lDhSfflxEXsFF20WCe5716",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 4.636,
+    "update": "tool_call_update",
+    "id": "call_03_epgHZEAgE3J6pjyLdIHf4450",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 8.458,
+    "update": "agent_message_chunk"
+  },
+  {
+    "elapsed_s": 8.458,
+    "update": "usage_update"
+  },
+  {
+    "elapsed_s": 8.458,
+    "update": "tool_call",
+    "id": "call_00_n05CfvAxnHlz989DbXKw8324",
+    "title": "edit",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 8.477,
+    "update": "tool_call_update",
+    "id": "call_00_n05CfvAxnHlz989DbXKw8324",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 12.181,
+    "update": "agent_message_chunk"
+  },
+  {
+    "elapsed_s": 12.182,
+    "update": "usage_update"
+  },
+  {
+    "elapsed_s": 12.182,
+    "update": "tool_call",
+    "id": "call_00_KspmnC9zguA3BVHV4c8j0386",
+    "title": "bash",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 12.23,
+    "update": "tool_call_update",
+    "id": "call_00_KspmnC9zguA3BVHV4c8j0386",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 14.654,
+    "update": "agent_message_chunk"
+  },
+  {
+    "elapsed_s": 14.654,
+    "update": "usage_update"
+  },
+  {
+    "elapsed_s": 14.654,
+    "update": "tool_call",
+    "id": "call_00_i7Zf0nMuC47XIPGpkazM9997",
+    "title": "bash",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 14.702,
+    "update": "tool_call_update",
+    "id": "call_00_i7Zf0nMuC47XIPGpkazM9997",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 17.861,
+    "update": "agent_message_chunk"
+  },
+  {
+    "elapsed_s": 17.861,
+    "update": "usage_update"
+  }
+]

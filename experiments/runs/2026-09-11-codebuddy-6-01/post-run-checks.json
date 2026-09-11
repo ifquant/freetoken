@@ -1,0 +1,17 @@
+{
+  "checkpoint_and_script_unchanged": {
+    "started": true,
+    "slow_operation.py": true
+  },
+  "finished_content": "completed\n",
+  "finished_inode_unchanged": true,
+  "finished_mtime_unchanged": true,
+  "finish_command_count": 1,
+  "total_tool_calls": 1,
+  "remaining_owned_group_members": [],
+  "git_status": "?? finished\n?? started\n",
+  "head": "ad7ccb4a23f1f3a3e6b5f786cb997b3cee8be8c2",
+  "result_success": true,
+  "session_id": "freetoken-cancel-v1-cb-20260911-01",
+  "passed": true
+}

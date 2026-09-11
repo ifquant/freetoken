@@ -1,0 +1,36 @@
+{
+  "name": "fine",
+  "backend": "dsh",
+  "model": "[\"deepseek-official\",\"deepseek-v4-flash\"]",
+  "fixture": "logrollup-v1",
+  "granularity": "3 turns",
+  "fine_phase1_readonly": true,
+  "attempts": [
+    {
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "awaiting_review",
+      "elapsed_s": 24.405,
+      "error": null
+    },
+    {
+      "attempt": 2,
+      "exit_code": 0,
+      "status": "awaiting_review",
+      "elapsed_s": 17.873,
+      "error": null
+    },
+    {
+      "attempt": 3,
+      "exit_code": 0,
+      "status": "awaiting_review",
+      "elapsed_s": 11.422,
+      "error": null
+    }
+  ],
+  "passed": true,
+  "total_s": 54.28390174987726,
+  "acceptance_and_record_s": 0.1695320839062333,
+  "report_bytes": 5306,
+  "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-dsh-01-fine"
+}

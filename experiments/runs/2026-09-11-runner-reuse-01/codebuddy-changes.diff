@@ -1,0 +1,45 @@
+diff --git a/USER_NOTE.txt b/USER_NOTE.txt
+index 45415f0..28db6a2 100644
+--- a/USER_NOTE.txt
++++ b/USER_NOTE.txt
+@@ -1 +1 @@
+-baseline note
++USER OWNED: preserve this uncommitted change
+diff --git a/rollup.py b/rollup.py
+index 3cede52..c4d3270 100644
+--- a/rollup.py
++++ b/rollup.py
+@@ -1,6 +1,31 @@
+ import json
+ 
++VALID_LEVELS = ("debug", "info", "warning", "error")
++
+ 
+ def summarize(lines):
+-    rows = [json.loads(line) for line in lines]
+-    return {"total": len(rows), "invalid": 0, "levels": {}}
++    total = 0
++    invalid = 0
++    levels = {}
++    for line in lines:
++        if not line.strip():
++            continue
++        try:
++            obj = json.loads(line)
++        except ValueError:
++            invalid += 1
++            continue
++        if not isinstance(obj, dict):
++            invalid += 1
++            continue
++        level = obj.get("level", "info")
++        if not isinstance(level, str) or not level.strip():
++            invalid += 1
++            continue
++        level = level.strip().lower()
++        if level not in VALID_LEVELS:
++            invalid += 1
++            continue
++        total += 1
++        levels[level] = levels.get(level, 0) + 1
++    return {"total": total, "invalid": invalid, "levels": levels}

@@ -1,0 +1,501 @@
+[
+  {
+    "elapsed_s": 2.036,
+    "type": "system",
+    "subtype": "init",
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "model": "deepseek-v4.1-flash",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 2.054,
+    "type": "system",
+    "subtype": "status",
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 2.055,
+    "type": "file-history-snapshot",
+    "subtype": null,
+    "process_alive": true,
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 5.09,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 5.09,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Bash"
+    ]
+  },
+  {
+    "elapsed_s": 5.091,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Bash"
+    ]
+  },
+  {
+    "elapsed_s": 5.094,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 5.098,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 198.49,
+    "type": "system",
+    "subtype": "init",
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "model": "deepseek-v4.1-flash",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 198.493,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 198.493,
+    "type": "file-history-snapshot",
+    "subtype": null,
+    "process_alive": true,
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 198.523,
+    "type": "system",
+    "subtype": "init",
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "model": "deepseek-v4.1-flash",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 201.15,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 201.15,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 201.15,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Bash"
+    ]
+  },
+  {
+    "elapsed_s": 201.195,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 203.84,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 203.84,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 203.84,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Read"
+    ]
+  },
+  {
+    "elapsed_s": 203.842,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 206.165,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 206.165,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Bash"
+    ]
+  },
+  {
+    "elapsed_s": 206.2,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 209.621,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Read"
+    ]
+  },
+  {
+    "elapsed_s": 209.624,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 212.247,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 212.248,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Bash"
+    ]
+  },
+  {
+    "elapsed_s": 212.284,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 218.131,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 218.131,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 218.132,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Read"
+    ]
+  },
+  {
+    "elapsed_s": 218.134,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Read"
+    ]
+  },
+  {
+    "elapsed_s": 218.136,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Read"
+    ]
+  },
+  {
+    "elapsed_s": 218.139,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Read"
+    ]
+  },
+  {
+    "elapsed_s": 218.143,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Read"
+    ]
+  },
+  {
+    "elapsed_s": 218.144,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Read"
+    ]
+  },
+  {
+    "elapsed_s": 218.145,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Read"
+    ]
+  },
+  {
+    "elapsed_s": 218.146,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Read"
+    ]
+  },
+  {
+    "elapsed_s": 218.147,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 218.148,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 218.148,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 218.149,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 218.15,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 218.15,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 218.151,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 218.152,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 278.986,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 278.986,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 278.986,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Edit"
+    ]
+  },
+  {
+    "elapsed_s": 278.989,
+    "type": "file-history-snapshot",
+    "subtype": null,
+    "process_alive": true,
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 278.991,
+    "type": "file-history-snapshot",
+    "subtype": null,
+    "process_alive": true,
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 278.993,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  }
+]

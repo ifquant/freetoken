@@ -1,0 +1,98 @@
+[
+  {
+    "name": "codebuddy-1-normal",
+    "passed": true,
+    "session_id": "bee98415-61bd-4004-ad36-73b539b42f41",
+    "first_s": 17.371,
+    "resume_s": 16.573,
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-codebuddy-1-normal"
+  },
+  {
+    "name": "codebuddy-1-cancel",
+    "passed": true,
+    "session_id": "ecae848e-b34f-4ad7-9a24-ee3aec89f97e",
+    "first_s": 22.488,
+    "resume_s": 21.474,
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-codebuddy-1-cancel"
+  },
+  {
+    "name": "codebuddy-1-timeout",
+    "passed": true,
+    "session_id": "ec0f2f0d-4ec5-444b-ba2f-0dee035cb756",
+    "first_s": 35.349,
+    "resume_s": 16.796,
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-codebuddy-1-timeout"
+  },
+  {
+    "name": "codebuddy-2-normal",
+    "passed": true,
+    "session_id": "38bb5783-62da-4ebb-ac53-5bf344bd0320",
+    "first_s": 17.404,
+    "resume_s": 14.871,
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-codebuddy-2-normal"
+  },
+  {
+    "name": "codebuddy-2-cancel",
+    "passed": true,
+    "session_id": "e01f2c13-3d30-42e8-89d3-aed14ca2ae54",
+    "first_s": 14.107,
+    "resume_s": 18.915,
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-codebuddy-2-cancel"
+  },
+  {
+    "name": "codebuddy-2-timeout",
+    "passed": true,
+    "session_id": "61e44f3d-5ffc-4eff-a36f-ded5c5029917",
+    "first_s": 35.42,
+    "resume_s": 21.744,
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-codebuddy-2-timeout"
+  },
+  {
+    "name": "dsh-1-normal",
+    "passed": true,
+    "session_id": "c0a25921-1eb5-4bab-bf86-ff91da139adf",
+    "first_s": 26.057,
+    "resume_s": 30.77,
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-dsh-1-normal"
+  },
+  {
+    "name": "dsh-1-cancel",
+    "passed": true,
+    "session_id": "3a1242c8-47f7-46e7-90ee-257f42c3e4be",
+    "first_s": 13.94,
+    "resume_s": 22.82,
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-dsh-1-cancel"
+  },
+  {
+    "name": "dsh-1-timeout",
+    "passed": true,
+    "session_id": "b7f4c7b8-8e97-4ff3-8277-2718db086895",
+    "first_s": 35.38,
+    "resume_s": 29.644,
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-dsh-1-timeout"
+  },
+  {
+    "name": "dsh-2-normal",
+    "passed": true,
+    "session_id": "2aaff7e9-5bac-4691-aa28-9139f822f874",
+    "first_s": 26.716,
+    "resume_s": 19.619,
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-dsh-2-normal"
+  },
+  {
+    "name": "dsh-2-cancel",
+    "passed": true,
+    "session_id": "b8b997ad-ec81-4ceb-963d-6c038fd5a0c1",
+    "first_s": 16.347,
+    "resume_s": 16.396,
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-dsh-2-cancel"
+  },
+  {
+    "name": "dsh-2-timeout",
+    "passed": true,
+    "session_id": "be5ccbf8-e8c6-453c-b3aa-c72ce69da2b9",
+    "first_s": 35.278,
+    "resume_s": 18.143,
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-dsh-2-timeout"
+  }
+]

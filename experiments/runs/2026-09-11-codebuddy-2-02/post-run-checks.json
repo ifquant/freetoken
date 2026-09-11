@@ -1,0 +1,11 @@
+{
+  "nonce_matches": true,
+  "files_unchanged_during_retry": {
+    "tags.py": true,
+    "acceptance.py": true,
+    ".gitignore": true
+  },
+  "remaining_process_group_members": [],
+  "git_status": " M tags.py\n",
+  "git_head": "3d504f90acc3454ff553d71dd7b7c05af421fe35"
+}

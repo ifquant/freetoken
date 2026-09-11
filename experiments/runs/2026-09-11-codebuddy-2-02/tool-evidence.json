@@ -1,0 +1,19 @@
+{
+  "tools": [
+    {
+      "name": "Bash",
+      "input": {
+        "command": "/opt/homebrew/bin/python3 -B acceptance.py",
+        "description": "Run acceptance tests"
+      }
+    }
+  ],
+  "results": [
+    [
+      {
+        "type": "text",
+        "text": "Command: /opt/homebrew/bin/python3 -B acceptance.py\nStdout: PASS ''\nPASS ' a, b,a, ,c '\nPASS 'A,a,A'\nPASS ',,'\n4/4 passed\n\nStderr: (empty)\nExit Code: 0\nSignal: (none)"
+      }
+    ]
+  ]
+}

@@ -1,0 +1,65 @@
+[
+  {
+    "elapsed_s": 2.336,
+    "type": "system",
+    "subtype": "init",
+    "session_id": "freetoken-timeout-v1-cb-20260911-01",
+    "model": "deepseek-v4.1-flash"
+  },
+  {
+    "elapsed_s": 2.342,
+    "type": "system",
+    "subtype": "status",
+    "session_id": "freetoken-timeout-v1-cb-20260911-01",
+    "model": null
+  },
+  {
+    "elapsed_s": 2.343,
+    "type": "file-history-snapshot",
+    "subtype": null,
+    "session_id": null,
+    "model": null
+  },
+  {
+    "elapsed_s": 5.396,
+    "type": "assistant",
+    "subtype": null,
+    "session_id": "freetoken-timeout-v1-cb-20260911-01",
+    "model": null
+  },
+  {
+    "elapsed_s": 5.396,
+    "type": "assistant",
+    "subtype": null,
+    "session_id": "freetoken-timeout-v1-cb-20260911-01",
+    "model": null
+  },
+  {
+    "elapsed_s": 5.455,
+    "type": "user",
+    "subtype": null,
+    "session_id": "freetoken-timeout-v1-cb-20260911-01",
+    "model": null
+  },
+  {
+    "elapsed_s": 8.453,
+    "type": "assistant",
+    "subtype": null,
+    "session_id": "freetoken-timeout-v1-cb-20260911-01",
+    "model": null
+  },
+  {
+    "elapsed_s": 10.294,
+    "type": "assistant",
+    "subtype": null,
+    "session_id": "freetoken-timeout-v1-cb-20260911-01",
+    "model": null
+  },
+  {
+    "elapsed_s": 10.305,
+    "type": "result",
+    "subtype": "success",
+    "session_id": "freetoken-timeout-v1-cb-20260911-01",
+    "model": null
+  }
+]

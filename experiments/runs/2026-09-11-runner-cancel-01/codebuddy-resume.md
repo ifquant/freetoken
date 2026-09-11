@@ -1,0 +1,1 @@
+原会话上轮已取消，进程确认停止；只执行一次 python3 -B slow_operation.py finish，完成剩余动作。不要调用 start 或改脚本/检查点，报告结果。

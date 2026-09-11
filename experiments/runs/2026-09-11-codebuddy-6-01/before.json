@@ -1,0 +1,10 @@
+{
+  "started": {
+    "sha256": "3656f9795aaf78da3e1fa74c5dfd8c658ce6a24ba5ad83c879fefe780e2c568e",
+    "mtime_ns": 1789104211620958637
+  },
+  "slow_operation.py": {
+    "sha256": "bf1bbd61d9f8ccbb89a0fe8ccc15805cc2408bf6dbc2f70d0937dd82d1d1760e",
+    "mtime_ns": 1789104136803984603
+  }
+}

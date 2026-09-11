@@ -1,0 +1,37 @@
+[
+  {
+    "elapsed_s": 2.171,
+    "type": "system",
+    "subtype": "init",
+    "session_id": "freetoken-timeout-v1-cb-20260911-01",
+    "model": "deepseek-v4.1-flash"
+  },
+  {
+    "elapsed_s": 2.179,
+    "type": "system",
+    "subtype": "status",
+    "session_id": "freetoken-timeout-v1-cb-20260911-01",
+    "model": null
+  },
+  {
+    "elapsed_s": 2.179,
+    "type": "file-history-snapshot",
+    "subtype": null,
+    "session_id": null,
+    "model": null
+  },
+  {
+    "elapsed_s": 9.518,
+    "type": "assistant",
+    "subtype": null,
+    "session_id": "freetoken-timeout-v1-cb-20260911-01",
+    "model": null
+  },
+  {
+    "elapsed_s": 9.518,
+    "type": "assistant",
+    "subtype": null,
+    "session_id": "freetoken-timeout-v1-cb-20260911-01",
+    "model": null
+  }
+]

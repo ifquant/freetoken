@@ -1,0 +1,118 @@
+[
+  {
+    "elapsed_s": 3.933,
+    "type": "system",
+    "subtype": "init",
+    "process_alive": true,
+    "session_id": "freetoken-cancel-v1-cb-20260911-01",
+    "model": "deepseek-v4.1-flash",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 3.941,
+    "type": "system",
+    "subtype": "status",
+    "process_alive": true,
+    "session_id": "freetoken-cancel-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 3.941,
+    "type": "file-history-snapshot",
+    "subtype": null,
+    "process_alive": true,
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 7.688,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-cancel-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 7.688,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-cancel-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 7.688,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-cancel-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Bash"
+    ]
+  },
+  {
+    "elapsed_s": 7.739,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-cancel-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 11.234,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-cancel-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 13.132,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-cancel-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 13.143,
+    "type": "result",
+    "subtype": "success",
+    "process_alive": true,
+    "session_id": "freetoken-cancel-v1-cb-20260911-01",
+    "is_error": false,
+    "duration_ms": 9205,
+    "duration_api_ms": 9205,
+    "num_turns": 11,
+    "total_cost_usd": 0,
+    "usage": {
+      "input_tokens": 36276,
+      "output_tokens": 1037,
+      "cache_creation_input_tokens": 9652,
+      "cache_read_input_tokens": 26624,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    },
+    "modelUsage": {
+      "deepseek-v4.1-flash": {
+        "inputTokens": 0,
+        "outputTokens": 460,
+        "cacheReadInputTokens": 23808,
+        "cacheCreationInputTokens": 2003,
+        "contextWindow": 1000000,
+        "maxOutputTokens": 128000
+      }
+    },
+    "message_model": null,
+    "tool_names": []
+  }
+]

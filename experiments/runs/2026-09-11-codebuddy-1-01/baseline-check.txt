@@ -1,0 +1,7 @@
+command: ['/opt/homebrew/bin/python3', '-B', 'acceptance.py']
+exit_code: 1
+FAIL '': expected [], got ['']
+FAIL ' a, b,a, ,c ': expected ['a', 'b', 'c'], got [' a', ' b', 'a', ' ', 'c ']
+FAIL 'A,a,A': expected ['A', 'a'], got ['A', 'a', 'A']
+FAIL ',,': expected [], got ['', '', '']
+0/4 passed

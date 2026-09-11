@@ -1,0 +1,105 @@
+{
+  "task_id": "reuse-codebuddy-task",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/reuse-codebuddy-logrollup-v1",
+  "backend": "codebuddy",
+  "executable": "/Users/dev/.local/share/codebuddy/versions/2.149.0/codebuddy",
+  "model": "deepseek-v4.1-flash",
+  "allow": [
+    "rollup.py"
+  ],
+  "session_id": "6aea9d74-3f99-49f9-bdca-6c3449733683",
+  "session_confirmed": true,
+  "attempt": 2,
+  "status": "awaiting_review",
+  "permission_mode": "full",
+  "controller": {
+    "pid": 6141,
+    "parent": 90458,
+    "group": 6141,
+    "zombie": false,
+    "birth": "Fri Sep 11 13:57:44 2026"
+  },
+  "worker": {
+    "pid": 6153,
+    "parent": 6141,
+    "group": 6153,
+    "zombie": false,
+    "birth": "Fri Sep 11 13:57:44 2026"
+  },
+  "started_at": 1789106264.629684,
+  "budget_seconds": 300.0,
+  "last_event": {
+    "elapsed_s": 34.809,
+    "kind": "result",
+    "subtype": "success",
+    "error": false
+  },
+  "attempt_dir": "/Users/dev/workspace2/freetoken/experiments/raw/reuse-codebuddy-task/attempts/0002",
+  "error": null,
+  "known_processes": [
+    {
+      "pid": 6153,
+      "parent": 6141,
+      "group": 6153,
+      "zombie": false,
+      "birth": "Fri Sep 11 13:57:44 2026"
+    },
+    {
+      "pid": 6168,
+      "parent": 6153,
+      "group": 6153,
+      "zombie": false,
+      "birth": "Fri Sep 11 13:57:45 2026"
+    },
+    {
+      "pid": 6218,
+      "parent": 6168,
+      "group": 6153,
+      "zombie": false,
+      "birth": "Fri Sep 11 13:57:45 2026"
+    },
+    {
+      "pid": 6219,
+      "parent": 6218,
+      "group": 6153,
+      "zombie": false,
+      "birth": "Fri Sep 11 13:57:45 2026"
+    },
+    {
+      "pid": 6369,
+      "parent": 6350,
+      "group": 6153,
+      "zombie": false,
+      "birth": "Fri Sep 11 13:57:46 2026"
+    },
+    {
+      "pid": 6370,
+      "parent": 6369,
+      "group": 6153,
+      "zombie": false,
+      "birth": "Fri Sep 11 13:57:46 2026"
+    },
+    {
+      "pid": 6350,
+      "parent": 6168,
+      "group": 6153,
+      "zombie": false,
+      "birth": "Fri Sep 11 13:57:46 2026"
+    },
+    {
+      "pid": 6423,
+      "parent": 1,
+      "group": 6153,
+      "zombie": false,
+      "birth": "Fri Sep 11 13:57:46 2026"
+    }
+  ],
+  "worker_exit": 0,
+  "elapsed_s": 35.074,
+  "changes": [
+    "rollup.py"
+  ],
+  "out_of_scope": [],
+  "cleanup_required": [],
+  "ended_at": 1789106299.60934
+}

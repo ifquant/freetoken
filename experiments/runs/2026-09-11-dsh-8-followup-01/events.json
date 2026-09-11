@@ -1,0 +1,131 @@
+[
+  {
+    "elapsed_s": 5.739,
+    "update": "usage_update",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484"
+  },
+  {
+    "elapsed_s": 5.739,
+    "update": "tool_call",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484",
+    "title": "bash",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 5.783,
+    "update": "tool_call_update",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 5.783,
+    "update": "tool_call",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484",
+    "title": "read",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 5.783,
+    "update": "tool_call",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484",
+    "title": "read",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 5.797,
+    "update": "tool_call_update",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 5.797,
+    "update": "tool_call_update",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 8.938,
+    "update": "agent_message_chunk",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484"
+  },
+  {
+    "elapsed_s": 8.938,
+    "update": "usage_update",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484"
+  },
+  {
+    "elapsed_s": 8.938,
+    "update": "tool_call",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484",
+    "title": "edit",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 8.954,
+    "update": "tool_call_update",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 11.61,
+    "update": "agent_message_chunk",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484"
+  },
+  {
+    "elapsed_s": 11.61,
+    "update": "usage_update",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484"
+  },
+  {
+    "elapsed_s": 11.61,
+    "update": "tool_call",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484",
+    "title": "bash",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 11.678,
+    "update": "tool_call_update",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 14.396,
+    "update": "agent_message_chunk",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484"
+  },
+  {
+    "elapsed_s": 14.396,
+    "update": "usage_update",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484"
+  },
+  {
+    "elapsed_s": 14.396,
+    "update": "tool_call",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484",
+    "title": "bash",
+    "status": "in_progress"
+  },
+  {
+    "elapsed_s": 14.448,
+    "update": "tool_call_update",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484",
+    "title": null,
+    "status": "completed"
+  },
+  {
+    "elapsed_s": 19.14,
+    "update": "agent_message_chunk",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484"
+  },
+  {
+    "elapsed_s": 19.141,
+    "update": "usage_update",
+    "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484"
+  }
+]

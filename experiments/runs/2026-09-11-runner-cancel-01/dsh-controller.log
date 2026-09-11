@@ -1,0 +1,8 @@
+{"elapsed_s": 1.332, "kind": "initialized", "session_id": "db5e15e7-90e8-4895-a82c-ef6c9b1ccfbf", "model": "[\"deepseek-official\",\"deepseek-v4-flash\"]"}
+{"elapsed_s": 8.466, "kind": "tool_call", "name": "bash", "status": "in_progress", "tool_id": "call_00_qwszxlS60E928RF29pIv4126"}
+{"elapsed_s": 8.493, "kind": "tool_call_update", "name": null, "status": "completed", "tool_id": "call_00_qwszxlS60E928RF29pIv4126"}
+{"elapsed_s": 12.19, "kind": "tool_call", "name": "bash", "status": "in_progress", "tool_id": "call_00_1v3BIqUn9LfHWmq8GLhw8155"}
+{"elapsed_s": 12.592, "kind": "stop_requested", "reason": "cancelled"}
+{"elapsed_s": 12.625, "kind": "tool_call_update", "name": null, "status": "failed", "tool_id": "call_00_1v3BIqUn9LfHWmq8GLhw8155"}
+{"elapsed_s": 12.626, "kind": "result", "stop_reason": "cancelled"}
+{"task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/runner-cancel-dsh", "status": "cancelled", "session_id": "db5e15e7-90e8-4895-a82c-ef6c9b1ccfbf", "attempt": 1, "report": "/Users/dev/workspace2/freetoken/experiments/raw/runner-cancel-dsh/attempts/0001/report.md", "error": null}

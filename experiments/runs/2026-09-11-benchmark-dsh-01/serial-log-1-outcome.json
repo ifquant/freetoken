@@ -1,0 +1,55 @@
+{
+  "task_id": "2026-09-11-benchmark-dsh-01-serial-log",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/2026-09-11-benchmark-dsh-01-serial-log",
+  "backend": "dsh",
+  "executable": "/opt/homebrew/lib/node_modules/@deepseek-ai/dsh/lib/bin.js",
+  "model": "[\"deepseek-official\",\"deepseek-v4-flash\"]",
+  "allow": [
+    "rollup.py"
+  ],
+  "session_id": "9b104a85-f236-47c5-b6fa-d29ffbe20e56",
+  "session_confirmed": true,
+  "attempt": 1,
+  "status": "awaiting_review",
+  "permission_mode": "full",
+  "controller": {
+    "pid": 11918,
+    "parent": 11417,
+    "group": 11417,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:09:11 2026"
+  },
+  "worker": {
+    "pid": 11924,
+    "parent": 11918,
+    "group": 11924,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:09:11 2026"
+  },
+  "started_at": 1789106951.266214,
+  "budget_seconds": 180.0,
+  "last_event": {
+    "elapsed_s": 29.208,
+    "kind": "result",
+    "stop_reason": "end_turn"
+  },
+  "attempt_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-dsh-01-serial-log/attempts/0001",
+  "error": null,
+  "known_processes": [
+    {
+      "pid": 11924,
+      "parent": 11918,
+      "group": 11924,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:09:11 2026"
+    }
+  ],
+  "worker_exit": 0,
+  "elapsed_s": 29.91,
+  "changes": [
+    "rollup.py"
+  ],
+  "out_of_scope": [],
+  "cleanup_required": [],
+  "ended_at": 1789106981.090571
+}

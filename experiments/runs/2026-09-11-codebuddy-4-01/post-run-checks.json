@@ -1,0 +1,12 @@
+{
+  "nonce_matches": true,
+  "frozen_files_match": {
+    "acceptance.py": true,
+    "acceptance_round2.py": true,
+    ".gitignore": true
+  },
+  "head": "3d504f90acc3454ff553d71dd7b7c05af421fe35",
+  "status": " M tags.py\n?? acceptance_round2.py\n",
+  "remaining_process_group_members": [],
+  "independent_acceptance_passed": true
+}

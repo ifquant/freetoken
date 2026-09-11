@@ -1,0 +1,1 @@
+仅执行一次前台 Bash 命令 /opt/homebrew/bin/python3 -B slow_operation.py start。控制端将在检查点出现后 10 秒自动取消。不要后台运行、重复执行、修改文件或调用其他命令。取消后不继续。

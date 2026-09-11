@@ -1,0 +1,18 @@
+[
+  {
+    "backend": "codebuddy",
+    "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/reuse-codebuddy-logrollup-v1",
+    "fixture": "logrollup-v1",
+    "allowed_file": "rollup.py",
+    "head": "64b266141ad7f323a3da205c1d434ba34d1fc822",
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/reuse-codebuddy-task"
+  },
+  {
+    "backend": "dsh",
+    "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/reuse-dsh-pathlist-v1",
+    "fixture": "pathlist-v1",
+    "allowed_file": "indexer.py",
+    "head": "a1a62a0458b2f5df9ae29dec8b87170d81593532",
+    "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/reuse-dsh-task"
+  }
+]

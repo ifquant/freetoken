@@ -1,0 +1,7 @@
+已按要求执行一次前台命令，结果如下：
+
+- 命令：`/opt/homebrew/bin/python3 -B slow_operation.py finish`
+- 退出状态：成功（无 `[exit code: N]` 错误标记）
+- 输出：`Finished once`
+
+未运行 `start`，未修改脚本或检查点，也未执行其他命令。

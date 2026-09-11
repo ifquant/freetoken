@@ -1,0 +1,1 @@
+只修改 tags.py 的 normalize_tags：按英文逗号拆分、去空白、忽略空项、按首次出现顺序去重，大小写敏感。运行 python3 -B acceptance.py。

@@ -1,0 +1,92 @@
+{
+  "task_id": "2026-09-11-repeat-lifecycle-01-codebuddy-1-cancel",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/2026-09-11-repeat-lifecycle-01-codebuddy-1-cancel",
+  "backend": "codebuddy",
+  "executable": "/Users/dev/.local/share/codebuddy/versions/2.149.0/codebuddy",
+  "model": "deepseek-v4.1-flash",
+  "allow": [
+    "started",
+    "finished"
+  ],
+  "session_id": "ecae848e-b34f-4ad7-9a24-ee3aec89f97e",
+  "session_confirmed": true,
+  "attempt": 2,
+  "status": "awaiting_review",
+  "permission_mode": "full",
+  "controller": {
+    "pid": 14590,
+    "parent": 12688,
+    "group": 12688,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:13:53 2026"
+  },
+  "worker": {
+    "pid": 14595,
+    "parent": 14590,
+    "group": 14595,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:13:53 2026"
+  },
+  "started_at": 1789107233.9232051,
+  "budget_seconds": 120.0,
+  "last_event": {
+    "elapsed_s": 21.24,
+    "kind": "result",
+    "subtype": "success",
+    "error": false
+  },
+  "attempt_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-codebuddy-1-cancel/attempts/0002",
+  "error": null,
+  "known_processes": [
+    {
+      "pid": 14595,
+      "parent": 14590,
+      "group": 14595,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:13:53 2026"
+    },
+    {
+      "pid": 14600,
+      "parent": 14595,
+      "group": 14595,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:13:54 2026"
+    },
+    {
+      "pid": 14853,
+      "parent": 1,
+      "group": 14595,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:13:55 2026"
+    },
+    {
+      "pid": 14964,
+      "parent": 14595,
+      "group": 14595,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:13:57 2026"
+    },
+    {
+      "pid": 14981,
+      "parent": 14595,
+      "group": 14981,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:14:02 2026"
+    },
+    {
+      "pid": 15029,
+      "parent": 14595,
+      "group": 15029,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:14:11 2026"
+    }
+  ],
+  "worker_exit": 0,
+  "elapsed_s": 21.474,
+  "changes": [
+    "finished"
+  ],
+  "out_of_scope": [],
+  "cleanup_required": [],
+  "ended_at": 1789107255.321824
+}

@@ -1,0 +1,84 @@
+{
+  "task_id": "2026-09-11-repeat-lifecycle-01-codebuddy-1-cancel",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/2026-09-11-repeat-lifecycle-01-codebuddy-1-cancel",
+  "backend": "codebuddy",
+  "executable": "/Users/dev/.local/share/codebuddy/versions/2.149.0/codebuddy",
+  "model": "deepseek-v4.1-flash",
+  "allow": [
+    "started",
+    "finished"
+  ],
+  "session_id": "ecae848e-b34f-4ad7-9a24-ee3aec89f97e",
+  "session_confirmed": true,
+  "attempt": 1,
+  "status": "cancelled",
+  "permission_mode": "full",
+  "controller": {
+    "pid": 13612,
+    "parent": 12688,
+    "group": 12688,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:12:44 2026"
+  },
+  "worker": {
+    "pid": 13618,
+    "parent": 13612,
+    "group": 13618,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:12:44 2026"
+  },
+  "started_at": 1789107164.7542841,
+  "budget_seconds": 120.0,
+  "last_event": {
+    "elapsed_s": 22.258,
+    "kind": "stop_requested",
+    "reason": "cancelled"
+  },
+  "attempt_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-codebuddy-1-cancel/attempts/0001",
+  "error": null,
+  "known_processes": [
+    {
+      "pid": 13618,
+      "parent": 13612,
+      "group": 13618,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:12:44 2026"
+    },
+    {
+      "pid": 13628,
+      "parent": 13618,
+      "group": 13618,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:12:45 2026"
+    },
+    {
+      "pid": 13886,
+      "parent": 1,
+      "group": 13618,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:12:46 2026"
+    },
+    {
+      "pid": 14056,
+      "parent": 13618,
+      "group": 14056,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:13:06 2026"
+    },
+    {
+      "pid": 14057,
+      "parent": 14056,
+      "group": 14056,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:13:06 2026"
+    }
+  ],
+  "worker_exit": 0,
+  "elapsed_s": 22.488,
+  "changes": [
+    "started"
+  ],
+  "out_of_scope": [],
+  "cleanup_required": [],
+  "ended_at": 1789107187.167247
+}

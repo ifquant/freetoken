@@ -1,0 +1,1 @@
+Codex independently read the one-shot report and corresponding tags.py: both correctly identify English comma and Chinese fullwidth comma. State records no modifications; independent behavior checks passed all 5 cases. This supplements the driver structural review, which reused the coding acceptance note; the saved driver now writes a separate one-shot evidence file.

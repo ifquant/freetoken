@@ -1,0 +1,84 @@
+{
+  "task_id": "2026-09-11-benchmark-codebuddy-01-serial-path",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/2026-09-11-benchmark-codebuddy-01-serial-path",
+  "backend": "codebuddy",
+  "executable": "/Users/dev/.local/share/codebuddy/versions/2.149.0/codebuddy",
+  "model": "deepseek-v4.1-flash",
+  "allow": [
+    "indexer.py"
+  ],
+  "session_id": "599eefab-9ea0-4f8e-9e09-7ab10cddba05",
+  "session_confirmed": true,
+  "attempt": 1,
+  "status": "awaiting_review",
+  "permission_mode": "full",
+  "controller": {
+    "pid": 10200,
+    "parent": 8172,
+    "group": 8172,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:06:24 2026"
+  },
+  "worker": {
+    "pid": 10206,
+    "parent": 10200,
+    "group": 10206,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:06:24 2026"
+  },
+  "started_at": 1789106784.391649,
+  "budget_seconds": 180.0,
+  "last_event": {
+    "elapsed_s": 30.84,
+    "kind": "result",
+    "subtype": "success",
+    "error": false
+  },
+  "attempt_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-codebuddy-01-serial-path/attempts/0001",
+  "error": null,
+  "known_processes": [
+    {
+      "pid": 10206,
+      "parent": 10200,
+      "group": 10206,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:06:24 2026"
+    },
+    {
+      "pid": 10215,
+      "parent": 10206,
+      "group": 10206,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:06:25 2026"
+    },
+    {
+      "pid": 10464,
+      "parent": 1,
+      "group": 10206,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:06:25 2026"
+    },
+    {
+      "pid": 10552,
+      "parent": 10206,
+      "group": 10552,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:06:42 2026"
+    },
+    {
+      "pid": 10554,
+      "parent": 10552,
+      "group": 10552,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:06:42 2026"
+    }
+  ],
+  "worker_exit": 0,
+  "elapsed_s": 31.039,
+  "changes": [
+    "indexer.py"
+  ],
+  "out_of_scope": [],
+  "cleanup_required": [],
+  "ended_at": 1789106815.357471
+}

@@ -1,0 +1,19 @@
+{
+  "tools": [
+    {
+      "name": "Bash",
+      "input": {
+        "command": "/opt/homebrew/bin/python3 -B slow_operation.py finish",
+        "description": "Run slow_operation.py finish once in foreground"
+      }
+    }
+  ],
+  "results": [
+    [
+      {
+        "type": "text",
+        "text": "Command: /opt/homebrew/bin/python3 -B slow_operation.py finish\nStdout: Finished once\n\nStderr: (empty)\nExit Code: 0\nSignal: (none)"
+      }
+    ]
+  ]
+}

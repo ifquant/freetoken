@@ -1,0 +1,85 @@
+{
+  "task_id": "2026-09-11-repeat-lifecycle-01-codebuddy-2-timeout",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/2026-09-11-repeat-lifecycle-01-codebuddy-2-timeout",
+  "backend": "codebuddy",
+  "executable": "/Users/dev/.local/share/codebuddy/versions/2.149.0/codebuddy",
+  "model": "deepseek-v4.1-flash",
+  "allow": [
+    "started",
+    "finished"
+  ],
+  "session_id": "61e44f3d-5ffc-4eff-a36f-ded5c5029917",
+  "session_confirmed": true,
+  "attempt": 2,
+  "status": "awaiting_review",
+  "permission_mode": "full",
+  "controller": {
+    "pid": 18936,
+    "parent": 12688,
+    "group": 12688,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:18:21 2026"
+  },
+  "worker": {
+    "pid": 18943,
+    "parent": 18936,
+    "group": 18943,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:18:21 2026"
+  },
+  "started_at": 1789107501.440442,
+  "budget_seconds": 120.0,
+  "last_event": {
+    "elapsed_s": 21.552,
+    "kind": "result",
+    "subtype": "success",
+    "error": false
+  },
+  "attempt_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-codebuddy-2-timeout/attempts/0002",
+  "error": null,
+  "known_processes": [
+    {
+      "pid": 18943,
+      "parent": 18936,
+      "group": 18943,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:18:21 2026"
+    },
+    {
+      "pid": 19072,
+      "parent": 19071,
+      "group": 18943,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:18:22 2026"
+    },
+    {
+      "pid": 18962,
+      "parent": 18943,
+      "group": 18943,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:18:22 2026"
+    },
+    {
+      "pid": 19071,
+      "parent": 18962,
+      "group": 18943,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:18:22 2026"
+    },
+    {
+      "pid": 19213,
+      "parent": 1,
+      "group": 18943,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:18:23 2026"
+    }
+  ],
+  "elapsed_s": 21.744,
+  "ended_at": 1789107523.105373,
+  "worker_exit": 0,
+  "changes": [
+    "finished"
+  ],
+  "out_of_scope": [],
+  "cleanup_required": []
+}

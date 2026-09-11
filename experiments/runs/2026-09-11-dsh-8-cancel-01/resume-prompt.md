@@ -1,0 +1,1 @@
+原会话已取消，旧慢进程确认停止。检查点保留，finished 不存在。只运行一次 /opt/homebrew/bin/python3 -B slow_operation.py finish 完成剩余动作，不运行 start、不改脚本或检查点、不执行其他命令。报告真实结果。

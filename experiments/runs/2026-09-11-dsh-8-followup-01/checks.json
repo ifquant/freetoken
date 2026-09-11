@@ -1,0 +1,22 @@
+{
+  "elapsed_s": 19.824327000183985,
+  "exit_code": 0,
+  "session_id": "d4e63367-191d-4bea-9a59-4f57d5049484",
+  "nonce_matches": true,
+  "frozen_match": true,
+  "acceptance": [
+    {
+      "file": "acceptance.py",
+      "exit_code": 0,
+      "stdout": "PASS ''\nPASS ' a, b,a, ,c '\nPASS 'A,a,A'\nPASS ',,'\n4/4 passed\n",
+      "stderr": ""
+    },
+    {
+      "file": "acceptance_round2.py",
+      "exit_code": 0,
+      "stdout": "PASS Chinese comma: 1/1 passed\n",
+      "stderr": ""
+    }
+  ],
+  "git_status": " M tags.py\n?? acceptance_round2.py\n"
+}

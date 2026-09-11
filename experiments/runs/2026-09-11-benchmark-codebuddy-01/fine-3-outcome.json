@@ -1,0 +1,89 @@
+{
+  "task_id": "2026-09-11-benchmark-codebuddy-01-fine",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/2026-09-11-benchmark-codebuddy-01-fine",
+  "backend": "codebuddy",
+  "executable": "/Users/dev/.local/share/codebuddy/versions/2.149.0/codebuddy",
+  "model": "deepseek-v4.1-flash",
+  "allow": [
+    "rollup.py"
+  ],
+  "session_id": "0406fcf6-c46a-4553-ac85-694876afaeb3",
+  "session_confirmed": true,
+  "attempt": 3,
+  "status": "failed",
+  "permission_mode": "full",
+  "controller": {
+    "pid": 9389,
+    "parent": 8172,
+    "group": 8172,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:05:36 2026"
+  },
+  "worker": {
+    "pid": 9394,
+    "parent": 9389,
+    "group": 9394,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:05:37 2026"
+  },
+  "started_at": 1789106737.0687969,
+  "budget_seconds": 180.0,
+  "last_event": {
+    "elapsed_s": 16.58,
+    "kind": "result",
+    "subtype": "error_during_execution",
+    "error": true
+  },
+  "attempt_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-codebuddy-01-fine/attempts/0003",
+  "error": "RuntimeError: CodeBuddy did not return a successful final result; inspect attempt raw logs",
+  "known_processes": [
+    {
+      "pid": 9394,
+      "parent": 9389,
+      "group": 9394,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:05:37 2026"
+    },
+    {
+      "pid": 9588,
+      "parent": 9578,
+      "group": 9394,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:05:38 2026"
+    },
+    {
+      "pid": 9402,
+      "parent": 9394,
+      "group": 9394,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:05:37 2026"
+    },
+    {
+      "pid": 9578,
+      "parent": 9402,
+      "group": 9394,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:05:38 2026"
+    },
+    {
+      "pid": 9652,
+      "parent": 1,
+      "group": 9394,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:05:38 2026"
+    },
+    {
+      "pid": 9735,
+      "parent": 9394,
+      "group": 9735,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:05:50 2026"
+    }
+  ],
+  "worker_exit": 0,
+  "elapsed_s": 16.799,
+  "changes": [],
+  "out_of_scope": [],
+  "cleanup_required": [],
+  "ended_at": 1789106753.793825
+}

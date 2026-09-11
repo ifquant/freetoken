@@ -1,0 +1,153 @@
+{
+  "rows": [
+    {
+      "name": "coarse",
+      "backend": "dsh",
+      "model": "[\"deepseek-official\",\"deepseek-v4-flash\"]",
+      "fixture": "logrollup-v1",
+      "granularity": "1 work package",
+      "fine_phase1_readonly": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 20.109,
+          "error": null
+        }
+      ],
+      "passed": true,
+      "total_s": 20.372837624978274,
+      "acceptance_and_record_s": 0.1539495000615716,
+      "report_bytes": 1270,
+      "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-dsh-01-coarse"
+    },
+    {
+      "name": "fine",
+      "backend": "dsh",
+      "model": "[\"deepseek-official\",\"deepseek-v4-flash\"]",
+      "fixture": "logrollup-v1",
+      "granularity": "3 turns",
+      "fine_phase1_readonly": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 24.405,
+          "error": null
+        },
+        {
+          "attempt": 2,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 17.873,
+          "error": null
+        },
+        {
+          "attempt": 3,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 11.422,
+          "error": null
+        }
+      ],
+      "passed": true,
+      "total_s": 54.28390174987726,
+      "acceptance_and_record_s": 0.1695320839062333,
+      "report_bytes": 5306,
+      "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-dsh-01-fine"
+    },
+    {
+      "name": "serial-log",
+      "backend": "dsh",
+      "model": "[\"deepseek-official\",\"deepseek-v4-flash\"]",
+      "fixture": "logrollup-v1",
+      "granularity": "1 work package",
+      "fine_phase1_readonly": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 29.91,
+          "error": null
+        }
+      ],
+      "passed": true,
+      "total_s": 30.204234041040763,
+      "acceptance_and_record_s": 0.16109233419410884,
+      "report_bytes": 1289,
+      "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-dsh-01-serial-log"
+    },
+    {
+      "name": "serial-path",
+      "backend": "dsh",
+      "model": "[\"deepseek-official\",\"deepseek-v4-flash\"]",
+      "fixture": "pathlist-v1",
+      "granularity": "1 work package",
+      "fine_phase1_readonly": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 26.745,
+          "error": null
+        }
+      ],
+      "passed": true,
+      "total_s": 27.022901999996975,
+      "acceptance_and_record_s": 0.16760249994695187,
+      "report_bytes": 1180,
+      "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-dsh-01-serial-path"
+    },
+    {
+      "name": "parallel-log",
+      "backend": "dsh",
+      "model": "[\"deepseek-official\",\"deepseek-v4-flash\"]",
+      "fixture": "logrollup-v1",
+      "granularity": "1 work package",
+      "fine_phase1_readonly": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 20.729,
+          "error": null
+        }
+      ],
+      "passed": true,
+      "total_s": 21.018524833023548,
+      "acceptance_and_record_s": 0.15409291698597372,
+      "report_bytes": 1372,
+      "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-dsh-01-parallel-log"
+    },
+    {
+      "name": "parallel-path",
+      "backend": "dsh",
+      "model": "[\"deepseek-official\",\"deepseek-v4-flash\"]",
+      "fixture": "pathlist-v1",
+      "granularity": "1 work package",
+      "fine_phase1_readonly": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "exit_code": 0,
+          "status": "awaiting_review",
+          "elapsed_s": 26.309,
+          "error": null
+        }
+      ],
+      "passed": true,
+      "total_s": 26.592898708069697,
+      "acceptance_and_record_s": 0.16259266692213714,
+      "report_bytes": 1019,
+      "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-dsh-01-parallel-path"
+    }
+  ],
+  "serial_pair_s": 57.355010375147685,
+  "parallel_pair_s": 26.66228995914571,
+  "limits": "One sample per scenario, fresh sessions not guaranteed cold cache; no billing inference."
+}

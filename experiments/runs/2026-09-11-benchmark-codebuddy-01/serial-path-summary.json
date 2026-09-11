@@ -1,0 +1,22 @@
+{
+  "name": "serial-path",
+  "backend": "codebuddy",
+  "model": "deepseek-v4.1-flash",
+  "fixture": "pathlist-v1",
+  "granularity": "1 work package",
+  "fine_phase1_readonly": null,
+  "attempts": [
+    {
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "awaiting_review",
+      "elapsed_s": 31.039,
+      "error": null
+    }
+  ],
+  "passed": true,
+  "total_s": 31.447102582780644,
+  "acceptance_and_record_s": 0.1695557909552008,
+  "report_bytes": 961,
+  "task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-codebuddy-01-serial-path"
+}

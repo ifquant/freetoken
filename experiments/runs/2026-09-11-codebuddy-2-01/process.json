@@ -1,0 +1,10 @@
+{
+  "started_at": "2026-09-11T12:39:17.734068+08:00",
+  "pid": 96488,
+  "session_id_requested": "freetoken-tags-v1-cb-20260911-01",
+  "exit_code": 0,
+  "elapsed_s": 300.042,
+  "first_event_s": 2.036,
+  "timed_out": true,
+  "event_count": 52
+}

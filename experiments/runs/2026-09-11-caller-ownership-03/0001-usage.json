@@ -1,0 +1,20 @@
+{
+  "source": "ACP usage_update; accounting scope unverified",
+  "updates": [
+    {
+      "sessionUpdate": "usage_update",
+      "used": 7780,
+      "size": 1000000
+    },
+    {
+      "sessionUpdate": "usage_update",
+      "used": 7836,
+      "size": 1000000
+    },
+    {
+      "sessionUpdate": "usage_update",
+      "used": 9026,
+      "size": 1000000
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "task_id": "caller-ownership-03",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/caller-ownership-03",
+  "backend": "dsh",
+  "executable": "/opt/homebrew/lib/node_modules/@deepseek-ai/dsh/lib/bin.js",
+  "model": "[\"deepseek-official\",\"deepseek-v4-flash\"]",
+  "allow": [
+    "tags.py"
+  ],
+  "session_id": "63dbb883-2fc8-45e0-962c-62c65e20ca9a",
+  "session_confirmed": true,
+  "attempt": 2,
+  "status": "awaiting_review",
+  "permission_mode": "full",
+  "one_shot": false,
+  "max_attempts": 3,
+  "controller": {
+    "pid": 24219,
+    "parent": 90458,
+    "group": 24219,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:36:48 2026"
+  },
+  "worker": {
+    "pid": 24231,
+    "parent": 24219,
+    "group": 24231,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:36:49 2026"
+  },
+  "started_at": 1789108609.3654988,
+  "budget_seconds": 120.0,
+  "last_event": {
+    "elapsed_s": 25.873,
+    "kind": "result",
+    "stop_reason": "end_turn"
+  },
+  "attempt_dir": "/Users/dev/workspace2/freetoken/experiments/raw/caller-ownership-03/attempts/0002",
+  "error": null,
+  "known_processes": [
+    {
+      "pid": 24231,
+      "parent": 24219,
+      "group": 24231,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:36:49 2026"
+    }
+  ],
+  "elapsed_s": 26.571,
+  "ended_at": 1789108635.857611,
+  "worker_exit": 0,
+  "changes": [
+    "tags.py"
+  ],
+  "out_of_scope": [],
+  "cleanup_required": []
+}

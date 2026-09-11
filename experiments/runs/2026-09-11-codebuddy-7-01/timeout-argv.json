@@ -1,0 +1,23 @@
+[
+  "/Users/dev/.local/share/codebuddy/versions/2.149.0/codebuddy",
+  "--print",
+  "--verbose",
+  "--output-format",
+  "stream-json",
+  "--model",
+  "deepseek-v4.1-flash",
+  "--session-id",
+  "freetoken-timeout-v1-cb-20260911-01",
+  "--max-turns",
+  "12",
+  "--permission-mode",
+  "dontAsk",
+  "--tools",
+  "Bash",
+  "--allowedTools",
+  "Bash(/opt/homebrew/bin/python3 -B slow_operation.py start)",
+  "--strict-mcp-config",
+  "--mcp-config",
+  "/Users/dev/workspace2/freetoken/experiments/runs/2026-09-11-codebuddy-1-01/empty-mcp.json",
+  "--"
+]

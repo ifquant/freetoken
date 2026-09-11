@@ -1,0 +1,20 @@
+{
+  "trigger_delay_s": 0,
+  "checkpoint": {
+    "pid": 4345,
+    "pgid": 4345,
+    "started_at": 1789105419.910294,
+    "delay_seconds": 45
+  },
+  "checkpoint_seen_s": 5.157878000056371,
+  "checkpoint_hash": "d399372a24b03523c3fee3a7a15be21c9ce6c174e6ce1c886d92757a2c693384",
+  "cancel_sent_s": 5.157878000056371,
+  "cancel_response": {
+    "stopReason": "cancelled"
+  },
+  "response_s": 5.16748841595836,
+  "child_stopped": true,
+  "child_checked_s": 5.1726214999798685,
+  "close_result": {},
+  "first_process_exit": 0
+}

@@ -1,0 +1,13 @@
+diff --git a/tags.py b/tags.py
+index 199efe6..c3ae4d9 100644
+--- a/tags.py
++++ b/tags.py
+@@ -1,2 +1,7 @@
+ def normalize_tags(text):
+-    return text.split(",")
++    tags = []
++    for part in text.replace("，", ",").split(","):
++        tag = part.strip()
++        if tag and tag not in tags:
++            tags.append(tag)
++    return tags

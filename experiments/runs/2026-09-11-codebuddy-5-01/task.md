@@ -1,0 +1,2 @@
+这是一次受控取消实验。只执行一次 Bash 命令：/opt/homebrew/bin/python3 -B slow_operation.py start
+该工具先创建 started 检查点，再等待约 45 秒，之后创建 finished。控制端会在看到检查点后取消你。不要后台运行，不加 shell 包装，不重复调用，不自行修改文件，不运行其他命令，不创建子 agent。权限拒绝就报告阻塞。若命令自然完成，仅报告实际结果；被取消后不要尝试继续。

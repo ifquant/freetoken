@@ -1,0 +1,16 @@
+{
+  "pid": 2760,
+  "elapsed_s": 56.76087087485939,
+  "exit_code": 0,
+  "checkpoint": {
+    "pid": 3112,
+    "pgid": 3111,
+    "started_at": 1789104865.275563,
+    "delay_seconds": 45
+  },
+  "checkpoint_observed_s": 9.719421250047162,
+  "cancel_sent_s": 19.77131670806557,
+  "stop_confirmed_s": 19.78290025005117,
+  "cleanup": [],
+  "finished_exists": false
+}

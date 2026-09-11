@@ -1,0 +1,1 @@
+只执行一次前台命令 python3 -B slow_operation.py start。等待控制端取消；不要重复调用或修改脚本。

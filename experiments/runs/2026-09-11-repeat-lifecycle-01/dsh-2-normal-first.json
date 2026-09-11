@@ -1,0 +1,55 @@
+{
+  "task_id": "2026-09-11-repeat-lifecycle-01-dsh-2-normal",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/2026-09-11-repeat-lifecycle-01-dsh-2-normal",
+  "backend": "dsh",
+  "executable": "/opt/homebrew/lib/node_modules/@deepseek-ai/dsh/lib/bin.js",
+  "model": "[\"deepseek-official\",\"deepseek-v4-flash\"]",
+  "allow": [
+    "tags.py"
+  ],
+  "session_id": "2aaff7e9-5bac-4691-aa28-9139f822f874",
+  "session_confirmed": true,
+  "attempt": 1,
+  "status": "awaiting_review",
+  "permission_mode": "full",
+  "controller": {
+    "pid": 17042,
+    "parent": 12688,
+    "group": 12688,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:15:59 2026"
+  },
+  "worker": {
+    "pid": 17048,
+    "parent": 17042,
+    "group": 17048,
+    "zombie": false,
+    "birth": "Fri Sep 11 14:15:59 2026"
+  },
+  "started_at": 1789107359.319891,
+  "budget_seconds": 120.0,
+  "last_event": {
+    "elapsed_s": 26.019,
+    "kind": "result",
+    "stop_reason": "end_turn"
+  },
+  "attempt_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-repeat-lifecycle-01-dsh-2-normal/attempts/0001",
+  "error": null,
+  "known_processes": [
+    {
+      "pid": 17048,
+      "parent": 17042,
+      "group": 17048,
+      "zombie": false,
+      "birth": "Fri Sep 11 14:15:59 2026"
+    }
+  ],
+  "elapsed_s": 26.716,
+  "ended_at": 1789107385.963527,
+  "worker_exit": 0,
+  "changes": [
+    "tags.py"
+  ],
+  "out_of_scope": [],
+  "cleanup_required": []
+}

@@ -1,0 +1,23 @@
+{"elapsed_s": 1.157, "kind": "initialized", "session_id": "0eb1e4d7-89e1-4b77-9f6f-12418f3a57e4", "model": "[\"deepseek-official\",\"deepseek-v4-flash\"]"}
+{"elapsed_s": 4.18, "kind": "tool_call", "name": "bash", "status": "in_progress", "tool_id": "call_00_KHtRFHBGQ8XhzX9GBvGN0438"}
+{"elapsed_s": 4.216, "kind": "tool_call_update", "name": null, "status": "completed", "tool_id": "call_00_KHtRFHBGQ8XhzX9GBvGN0438"}
+{"elapsed_s": 4.247, "kind": "tool_call", "name": "read", "status": "in_progress", "tool_id": "call_01_Wt4UpXmMlfML1SA33Un56516"}
+{"elapsed_s": 4.247, "kind": "tool_call_update", "name": null, "status": "completed", "tool_id": "call_01_Wt4UpXmMlfML1SA33Un56516"}
+{"elapsed_s": 8.025, "kind": "tool_call", "name": "read", "status": "in_progress", "tool_id": "call_00_r4zqRN42CasqqtbSX2aa0267"}
+{"elapsed_s": 8.031, "kind": "tool_call", "name": "read", "status": "in_progress", "tool_id": "call_01_EZt8MOUB8nkP4PQY3QPu1196"}
+{"elapsed_s": 8.031, "kind": "tool_call", "name": "read", "status": "in_progress", "tool_id": "call_02_k9BcIe69cMxJvQt06nPk8237"}
+{"elapsed_s": 8.031, "kind": "tool_call", "name": "read", "status": "in_progress", "tool_id": "call_03_O0u8sYGBRmmSsOwbzLbH8251"}
+{"elapsed_s": 8.032, "kind": "tool_call_update", "name": null, "status": "completed", "tool_id": "call_00_r4zqRN42CasqqtbSX2aa0267"}
+{"elapsed_s": 8.032, "kind": "tool_call_update", "name": null, "status": "completed", "tool_id": "call_01_EZt8MOUB8nkP4PQY3QPu1196"}
+{"elapsed_s": 8.033, "kind": "tool_call_update", "name": null, "status": "completed", "tool_id": "call_02_k9BcIe69cMxJvQt06nPk8237"}
+{"elapsed_s": 8.033, "kind": "tool_call_update", "name": null, "status": "completed", "tool_id": "call_03_O0u8sYGBRmmSsOwbzLbH8251"}
+{"elapsed_s": 14.48, "kind": "tool_call", "name": "write", "status": "in_progress", "tool_id": "call_00_4E9Op5UzzYkkmTt1PN930299"}
+{"elapsed_s": 14.498, "kind": "tool_call_update", "name": null, "status": "completed", "tool_id": "call_00_4E9Op5UzzYkkmTt1PN930299"}
+{"elapsed_s": 18.076, "kind": "tool_call", "name": "bash", "status": "in_progress", "tool_id": "call_00_ET_O0YXP7id8RLkX08xhnC84986"}
+{"elapsed_s": 18.143, "kind": "tool_call_update", "name": null, "status": "completed", "tool_id": "call_00_ET_O0YXP7id8RLkX08xhnC84986"}
+{"elapsed_s": 18.145, "kind": "tool_call", "name": "bash", "status": "in_progress", "tool_id": "call_01_ET_sDeIEOmw0cQlDdhIzkqL5821"}
+{"elapsed_s": 18.186, "kind": "tool_call_update", "name": null, "status": "completed", "tool_id": "call_01_ET_sDeIEOmw0cQlDdhIzkqL5821"}
+{"elapsed_s": 21.99, "kind": "tool_call", "name": "bash", "status": "in_progress", "tool_id": "call_00_lGJTo1ADTC6CjvI33skK1065"}
+{"elapsed_s": 22.039, "kind": "tool_call_update", "name": null, "status": "completed", "tool_id": "call_00_lGJTo1ADTC6CjvI33skK1065"}
+{"elapsed_s": 25.665, "kind": "result", "stop_reason": "end_turn"}
+{"task_dir": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-dsh-01-parallel-path", "status": "awaiting_review", "session_id": "0eb1e4d7-89e1-4b77-9f6f-12418f3a57e4", "attempt": 1, "report": "/Users/dev/workspace2/freetoken/experiments/raw/2026-09-11-benchmark-dsh-01-parallel-path/attempts/0001/report.md", "error": null}

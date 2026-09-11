@@ -1,0 +1,49 @@
+diff --git a/USER_NOTE.txt b/USER_NOTE.txt
+index 45415f0..28db6a2 100644
+--- a/USER_NOTE.txt
++++ b/USER_NOTE.txt
+@@ -1 +1 @@
+-baseline note
++USER OWNED: preserve this uncommitted change
+diff --git a/indexer.py b/indexer.py
+index 106aad2..c702e0a 100644
+--- a/indexer.py
++++ b/indexer.py
+@@ -1,5 +1,34 @@
+-from pathlib import Path
++import os
+ 
+ 
+-def collect_paths(root, suffixes):
+-    return [str(path) for path in Path(root).iterdir()]
++def collect_paths(root, suffixes, include_hidden=False):
++    """Collect regular files below ``root`` as sorted, relative POSIX paths.
++
++    Hidden files/directories (any path segment starting with ``.``) are
++    excluded unless ``include_hidden`` is true.  All symbolic links are always
++    excluded and linked directories are never followed.  ``suffixes`` accepts
++    extensions with or without a leading dot and is matched case-sensitively.
++    An empty ``suffixes`` keeps every file.
++    """
++    root = os.fspath(root)
++    normalized = {suffix if suffix.startswith(".") else "." + suffix for suffix in suffixes}
++
++    results = []
++    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
++        dirnames[:] = [
++            name
++            for name in dirnames
++            if (include_hidden or not name.startswith("."))
++            and not os.path.islink(os.path.join(dirpath, name))
++        ]
++        for name in filenames:
++            if name.startswith(".") and not include_hidden:
++                continue
++            full = os.path.join(dirpath, name)
++            if os.path.islink(full) or not os.path.isfile(full):
++                continue
++            if normalized and not any(name.endswith(suffix) for suffix in normalized):
++                continue
++            results.append(os.path.relpath(full, root).replace(os.sep, "/"))
++
++    return sorted(results)

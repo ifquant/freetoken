@@ -1,0 +1,157 @@
+[
+  {
+    "elapsed_s": 2.004,
+    "type": "system",
+    "subtype": "init",
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "model": "deepseek-v4.1-flash",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 2.014,
+    "type": "system",
+    "subtype": "status",
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 2.014,
+    "type": "file-history-snapshot",
+    "subtype": null,
+    "process_alive": true,
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 5.01,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 5.01,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Edit"
+    ]
+  },
+  {
+    "elapsed_s": 5.014,
+    "type": "file-history-snapshot",
+    "subtype": null,
+    "process_alive": true,
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 5.017,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 7.691,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Bash"
+    ]
+  },
+  {
+    "elapsed_s": 7.731,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 10.494,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": [
+      "Bash"
+    ]
+  },
+  {
+    "elapsed_s": 10.528,
+    "type": "user",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": null,
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 14.198,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 14.595,
+    "type": "assistant",
+    "subtype": null,
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "message_model": "deepseek-v4.1-flash",
+    "tool_names": []
+  },
+  {
+    "elapsed_s": 14.607,
+    "type": "result",
+    "subtype": "success",
+    "process_alive": true,
+    "session_id": "freetoken-tags-v1-cb-20260911-01",
+    "is_error": false,
+    "duration_ms": 12599,
+    "duration_api_ms": 12599,
+    "num_turns": 62,
+    "total_cost_usd": 0,
+    "usage": {
+      "input_tokens": 241422,
+      "output_tokens": 3872,
+      "cache_creation_input_tokens": 21262,
+      "cache_read_input_tokens": 220160,
+      "cache_creation": null,
+      "server_tool_use": null,
+      "service_tier": null
+    },
+    "modelUsage": {
+      "deepseek-v4.1-flash": {
+        "inputTokens": 0,
+        "outputTokens": 750,
+        "cacheReadInputTokens": 94080,
+        "cacheCreationInputTokens": 2712,
+        "contextWindow": 1000000,
+        "maxOutputTokens": 128000
+      }
+    },
+    "message_model": null,
+    "tool_names": []
+  }
+]

@@ -1,0 +1,31 @@
+{
+  "argv_without_prompt": [
+    "/Users/dev/.local/share/codebuddy/versions/2.149.0/codebuddy",
+    "--print",
+    "--verbose",
+    "--output-format",
+    "stream-json",
+    "--model",
+    "deepseek-v4.1-flash",
+    "--resume",
+    "freetoken-cancel-v1-cb-20260911-01",
+    "--max-turns",
+    "12",
+    "--permission-mode",
+    "dontAsk",
+    "--tools",
+    "Bash",
+    "--allowedTools",
+    "Bash(/opt/homebrew/bin/python3 -B slow_operation.py finish)",
+    "--strict-mcp-config",
+    "--mcp-config",
+    "/Users/dev/workspace2/freetoken/experiments/runs/2026-09-11-codebuddy-1-01/empty-mcp.json",
+    "--"
+  ],
+  "prompt_file": "/Users/dev/workspace2/freetoken/experiments/runs/2026-09-11-codebuddy-6-01/followup.md",
+  "cwd": "/Users/dev/workspace2/freetoken/experiments/workspaces/codebuddy-cancel-v1",
+  "session_id_requested": "freetoken-cancel-v1-cb-20260911-01",
+  "resume": true,
+  "attempt_id": "6-01",
+  "budget_seconds": 300
+}

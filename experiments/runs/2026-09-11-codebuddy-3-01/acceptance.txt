@@ -1,0 +1,7 @@
+command: ['/opt/homebrew/bin/python3', '-B', 'acceptance.py']
+exit_code: 0
+PASS ''
+PASS ' a, b,a, ,c '
+PASS 'A,a,A'
+PASS ',,'
+4/4 passed

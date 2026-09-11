@@ -1,0 +1,24 @@
+{
+  "started_at": "2026-09-11T13:23:23.773239+08:00",
+  "pid": 1132,
+  "session_id_requested": "freetoken-cancel-v1-cb-20260911-01",
+  "checkpoint": {
+    "pid": 1479,
+    "pgid": 1478,
+    "started_at": 1789104211.6208909,
+    "delay_seconds": 45
+  },
+  "child_initial_status": "1479  1478  1478 S    Fri Sep 11 13:23:31 2026",
+  "cancel_sent_s": 7.910255125025287,
+  "checkpoint_hash": "3656f9795aaf78da3e1fa74c5dfd8c658ce6a24ba5ad83c879fefe780e2c568e",
+  "native_stop_confirmed_s": 8.428204792086035,
+  "exit_code": 0,
+  "elapsed_s": 54.972,
+  "native_cancel_passed": true,
+  "finished_exists_after_original_deadline": false,
+  "cleanup_actions": [],
+  "final_child_status": "",
+  "script_hash_matches": true,
+  "checkpoint_hash_matches": true,
+  "passed": true
+}

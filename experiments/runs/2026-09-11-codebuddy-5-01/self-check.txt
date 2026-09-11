@@ -1,0 +1,5 @@
+exit_code: 0
+Checkpoint saved; waiting
+Finished once
+Already finished
+Self-check passed

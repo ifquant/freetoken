@@ -1,0 +1,16 @@
+{
+  "started_at": "2026-09-11T13:29:59.264793+08:00",
+  "pid": 1952,
+  "session_id_requested": "freetoken-cancel-v1-cb-20260911-01",
+  "resume": true,
+  "exit_code": 0,
+  "elapsed_s": 13.153,
+  "first_event_s": 3.933,
+  "timed_out": false,
+  "event_count": 10,
+  "finished_first_observation": {
+    "observed_s": 7.739251792198047,
+    "mtime_ns": 1789104606991578402,
+    "inode": 420610925
+  }
+}

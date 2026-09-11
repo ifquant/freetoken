@@ -1,0 +1,9 @@
+{
+  "exit_code": 0,
+  "protected_hashes_match": {
+    "acceptance.py": true,
+    ".gitignore": true
+  },
+  "git_status": " M tags.py\n",
+  "head": "a40e36eebb8b8169cf0e75f456972fb9782c0aa0"
+}

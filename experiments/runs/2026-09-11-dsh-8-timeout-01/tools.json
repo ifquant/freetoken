@@ -1,0 +1,52 @@
+[
+  {
+    "sessionUpdate": "tool_call",
+    "toolCallId": "call_00_YrNSwqRfklcTCIPXaZEO3409",
+    "title": "bash",
+    "kind": "other",
+    "status": "in_progress",
+    "rawInput": {
+      "command": "/opt/homebrew/bin/python3 -B slow_operation.py start",
+      "description": "Run slow_operation.py start once"
+    }
+  },
+  {
+    "sessionUpdate": "tool_call_update",
+    "toolCallId": "call_00_YrNSwqRfklcTCIPXaZEO3409",
+    "status": "failed",
+    "content": [
+      {
+        "type": "content",
+        "content": {
+          "type": "text",
+          "text": "Error: tool call aborted"
+        }
+      }
+    ]
+  },
+  {
+    "sessionUpdate": "tool_call",
+    "toolCallId": "call_00_KDS42Cv2ypr2PQq0rLAp8834",
+    "title": "bash",
+    "kind": "other",
+    "status": "in_progress",
+    "rawInput": {
+      "command": "/opt/homebrew/bin/python3 -B slow_operation.py finish",
+      "description": "Run slow_operation.py finish once"
+    }
+  },
+  {
+    "sessionUpdate": "tool_call_update",
+    "toolCallId": "call_00_KDS42Cv2ypr2PQq0rLAp8834",
+    "status": "completed",
+    "content": [
+      {
+        "type": "content",
+        "content": {
+          "type": "text",
+          "text": "Finished once\n"
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,16 @@
+diff --git a/tags.py b/tags.py
+index 199efe6..8982ef0 100644
+--- a/tags.py
++++ b/tags.py
+@@ -1,2 +1,10 @@
+ def normalize_tags(text):
+-    return text.split(",")
++    tags = []
++    seen = set()
++    for part in text.split(","):
++        tag = part.strip()
++        if not tag or tag in seen:
++            continue
++        seen.add(tag)
++        tags.append(tag)
++    return tags
