@@ -20,6 +20,8 @@ from acp_stdio import ACP
 
 
 ACTIVE = {"starting", "running", "stopping"}
+DEFAULT_MAX_TURNS = 200
+NON_SUCCESS_TERMINAL = {"failed", "timed_out", "cancelled", "interrupted"}
 
 
 def save(path, value):
@@ -84,6 +86,27 @@ def changed(before, after):
 def in_scope(name, allowed):
     return any(item == "." or name == item or
                (item.endswith("/") and name.startswith(item)) for item in allowed)
+
+
+def resolved_max_turns(state, requested):
+    """Explicit override wins; otherwise retain the persisted value, defaulting to 200."""
+    if requested is not None:
+        return requested
+    return state.get("max_turns", DEFAULT_MAX_TURNS)
+
+
+def result_detail(result, limit=400):
+    """Compact provider-failure diagnostics; no raw reasoning or synthesized report."""
+    if not result:
+        return "no provider result event was received"
+    parts = []
+    if result.get("subtype") is not None:
+        parts.append(f"subtype={result['subtype']}")
+    parts.append(f"is_error={bool(result.get('is_error'))}")
+    text = result.get("errors") or result.get("error") or result.get("result")
+    if text:
+        parts.append("detail=" + " ".join(str(text).split())[:limit])
+    return "; ".join(parts)
 
 
 def workspace_lock_path(cwd):
@@ -214,7 +237,8 @@ class Run:
 def codebuddy(run):
     state = run.state
     argv = [state["executable"], "--print", "--verbose", "--output-format", "stream-json",
-            "--permission-mode", "bypassPermissions", "--max-turns", "40"]
+            "--permission-mode", "bypassPermissions", "--max-turns",
+            str(state.get("max_turns", DEFAULT_MAX_TURNS))]
     if state.get("model"):
         argv += ["--model", state["model"]]
     if state.get("one_shot"):
@@ -272,7 +296,9 @@ def codebuddy(run):
                                     run.event("tool_finished", error=block.get("is_error", False))
                         elif kind == "result":
                             result = item
-                            (run.attempt / "report.md").write_text(str(item.get("result", "")))
+                            save(run.attempt / "result.json", item)
+                            if not item.get("is_error") and item.get("subtype") == "success":
+                                (run.attempt / "report.md").write_text(str(item.get("result", "")))
                             save(run.attempt / "usage.json", {
                                 "source": "CodeBuddy result; accounting scope not verified",
                                 "usage": item.get("usage"), "modelUsage": item.get("modelUsage"),
@@ -286,7 +312,7 @@ def codebuddy(run):
     if run.stop_reason:
         return run.stop_reason
     if not result or result.get("is_error") or result.get("subtype") != "success" or state["worker_exit"]:
-        raise RuntimeError("CodeBuddy did not return a successful final result; inspect attempt raw logs")
+        raise RuntimeError(f"CodeBuddy did not return a successful final result: {result_detail(result)}")
     return "awaiting_review"
 
 
@@ -380,6 +406,8 @@ def dsh(run):
 def dispatch(args):
     folder = Path(args.task_dir).expanduser().resolve()
     if args.command == "start":
+        if args.backend == "dsh" and args.max_turns is not None:
+            raise ValueError("--max-turns is only valid for the codebuddy backend")
         cwd = Path(args.cwd).expanduser().resolve()
         if Path(git(cwd, "rev-parse", "--show-toplevel").strip()).resolve() != cwd:
             raise ValueError("Use the root of an explicit Git workspace/worktree")
@@ -400,6 +428,8 @@ def dispatch(args):
         save(folder / "state.json", state)
     with exclusive(folder / "task.lock"):
         state = read(folder / "state.json")
+        if args.command == "resume" and state["backend"] == "dsh" and args.max_turns is not None:
+            raise ValueError("--max-turns is only valid for the codebuddy backend")
         if state["status"] in ACTIVE | {"needs_attention", "scope_violation"}:
             raise RuntimeError("Unsettled attempt; inspect status and recover before resuming")
         if state.get("session_closed") or (args.command == "resume" and state.get("one_shot")):
@@ -430,6 +460,8 @@ def dispatch(args):
                 (Path(state["attempt_dir"]) / "decision.md").write_text(prompt)
             state["attempt"] += 1
             state["max_attempts"] = limit
+            if state["backend"] == "codebuddy":
+                state["max_turns"] = resolved_max_turns(state, getattr(args, "max_turns", None))
             scope = ", ".join(state["allow"]) or "none (read-only task)"
             prompt += (f"\n\nWorker contract: work only in {cwd}. Preserve existing changes. "
                        f"Allowed changes: {scope}. Do not edit other files, Git metadata, or commit. "
@@ -490,7 +522,7 @@ def inspect_task(args):
         if state["status"] in ACTIVE and not state["controller_alive"]:
             state["observed_status"] = "unconfirmed; inspect known processes before recover"
         keys = ("task_id", "backend", "status", "observed_status", "model", "session_id",
-                "attempt", "attempt_dir", "budget_seconds", "elapsed_s", "last_event",
+                "attempt", "attempt_dir", "budget_seconds", "max_turns", "elapsed_s", "last_event",
                 "controller_alive", "worker_alive", "changes", "out_of_scope", "error",
                 "one_shot", "max_attempts", "session_closed", "cleanup")
         print(json.dumps({key: state[key] for key in keys if key in state}, ensure_ascii=False, indent=2))
@@ -549,10 +581,19 @@ def inspect_task(args):
                     state["status"] = "interrupted"
                 lock_record(lease, {"active": False, "task_dir": str(folder)})
             else:
-                if state["status"] != "awaiting_review":
-                    raise RuntimeError("Only a completed worker result can enter review")
-                expected = read(Path(state["attempt_dir"]) / "after.json")
-                if snapshot(Path(state["cwd"])) != expected:
+                if state["status"] not in NON_SUCCESS_TERMINAL | {"awaiting_review"}:
+                    raise RuntimeError("Only a completed or terminal attempt can enter review")
+                if state["status"] in NON_SUCCESS_TERMINAL:
+                    if args.decision == "accepted":
+                        raise RuntimeError("A failed, timed-out, cancelled or interrupted attempt cannot be accepted as worker success")
+                    table = processes()
+                    identities = [state.get("controller"), state.get("worker"), *state.get("known_processes", [])]
+                    if any(is_alive(item, table) for item in identities):
+                        raise RuntimeError("An observed process is still alive; confirm it stopped before review")
+                after_path = Path(state["attempt_dir"]) / "after.json"
+                if not after_path.is_file():
+                    raise RuntimeError("Missing after snapshot; recover or provide an explicit diagnostic before review")
+                if snapshot(Path(state["cwd"])) != read(after_path):
                     raise RuntimeError("Workspace changed since worker finished; review evidence is stale")
                 state["status"] = args.decision
             (Path(state["attempt_dir"]) / f"{args.command}.md").write_text(note)
@@ -572,6 +613,7 @@ def main():
                 p.add_argument("--prompt-file", required=name == "start")
             p.add_argument("--budget", type=float, default=300)
             p.add_argument("--max-attempts", type=int, help="Total task attempts; default 3, explicit extension allowed")
+            p.add_argument("--max-turns", type=int, help="CodeBuddy turn limit; default 200, retained when omitted, codebuddy only")
         if name == "start":
             p.add_argument("--cwd", required=True)
             p.add_argument("--backend", choices=("codebuddy", "dsh"), required=True)
@@ -590,8 +632,14 @@ def main():
         parser.error("--budget must be positive and less than one day")
     if getattr(args, "max_attempts", None) is not None and args.max_attempts < 1:
         parser.error("--max-attempts must be positive")
+    if getattr(args, "max_turns", None) is not None and args.max_turns < 1:
+        parser.error("--max-turns must be positive")
     try:
         if args.command == "revise":
+            if getattr(args, "max_turns", None) is not None:
+                backend = read(Path(args.task_dir).expanduser().resolve() / "state.json").get("backend")
+                if backend == "dsh":
+                    raise ValueError("--max-turns is only valid for the codebuddy backend")
             inspect_task(argparse.Namespace(command="review", task_dir=args.task_dir,
                          decision="needs_work", evidence_file=args.evidence_file))
             args.command, args.prompt_file = "resume", None

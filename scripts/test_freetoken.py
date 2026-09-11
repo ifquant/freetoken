@@ -9,7 +9,7 @@ import sys
 import tempfile
 import time
 
-from freetoken import changed, in_scope, is_alive, snapshot
+from freetoken import changed, in_scope, is_alive, processes, snapshot
 
 
 RUNNER = Path(__file__).with_name("freetoken.py").resolve()
@@ -23,6 +23,9 @@ if prompt.startswith('hold'):
     signal.signal(signal.SIGINT,lambda *_: sys.exit(0))
     Path('ready').write_text('ready')
     while True: time.sleep(.1)
+if prompt.startswith('fail'):
+    print(json.dumps({'type':'result','subtype':'error_max_turns','is_error':True,'session_id':sid,'errors':['turn limit reached before completion']}),flush=True)
+    sys.exit(0)
 Path('out.txt').write_text('repaired' if 'repair-marker' in prompt else 'result')
 if prompt.startswith('outside'): Path('keep.txt').write_text('oops')
 print(json.dumps({'type':'result','subtype':'success','is_error':False,'session_id':sid,'result':'done'}),flush=True)
@@ -143,10 +146,14 @@ with tempfile.TemporaryDirectory(prefix="freetoken-test-") as directory:
                 process.wait(timeout=15)
     state = json.loads((task / "state.json").read_text())
     assert state["status"] == "cancelled"
+    cli("review", "--task-dir", task, "--decision", "accepted", "--evidence-file", evidence, expected=2)
+    cli("review", "--task-dir", task, "--decision", "needs_work", "--evidence-file", evidence)
     (work / "ready").unlink()
     task = root / "timeout"
     cli(*start_args(task, .6), expected=2)
     assert json.loads((task / "state.json").read_text())["status"] == "timed_out"
+    cli("review", "--task-dir", task, "--decision", "accepted", "--evidence-file", evidence, expected=2)
+    cli("review", "--task-dir", task, "--decision", "blocked", "--evidence-file", evidence)
     # A stalled ACP startup must consume the same budget and never submit work.
     slow_acp = root / "slow-acp"
     slow_acp.write_text('''#!/usr/bin/env python3
@@ -165,6 +172,9 @@ for line in sys.stdin:
         "--executable", slow_acp, "--prompt-file", prompt, "--budget", ".2", expected=2)
     assert json.loads((task / "state.json").read_text())["status"] == "timed_out"
     assert time.monotonic() - started < 5 and not (work / "unexpected-prompt").exists()
+    for command, extra in (("resume", ["--prompt-file", prompt]), ("revise", ["--evidence-file", evidence])):
+        cli(command, "--task-dir", task, *extra, "--max-turns", "5", expected=2)
+        assert json.loads((task / "state.json").read_text())["status"] == "timed_out"
     # Killing the controller releases flock, but must not release its writer lease.
     (work / "ready").unlink(missing_ok=True)
     task = root / "crashed"
@@ -188,6 +198,8 @@ for line in sys.stdin:
                 time.sleep(.05)
             cli("recover", "--task-dir", task, "--evidence-file", evidence)
             assert json.loads((task / "state.json").read_text())["status"] == "interrupted"
+            # Recovery proves stopped processes, not a missing worker after-snapshot.
+            cli("review", "--task-dir", task, "--decision", "needs_work", "--evidence-file", evidence, expected=2)
         finally:
             if process.poll() is None:
                 process.kill()
@@ -204,6 +216,114 @@ for line in sys.stdin:
     cli("recover", "--task-dir", task, "--evidence-file", evidence)
     assert json.loads((task / "state.json").read_text())["status"] == "needs_work"
     assert not in_scope("src2/a.py", ["src/"]) and in_scope("src/a.py", ["src/"])
+
+    # Turn budget: configured, default, retained and overridden; invalid and dsh rejected.
+    (work / "out.txt").unlink(missing_ok=True)
+    turns = root / "turns"
+    prompt.write_text("success")
+    cli(*start_args(turns), "--max-turns", "7")
+    state = json.loads((turns / "state.json").read_text())
+    assert state["max_turns"] == 7
+    argv = json.loads((turns / "attempts/0001/argv.json").read_text())
+    assert argv[argv.index("--max-turns") + 1] == "7"
+    assert json.loads((turns / "attempts/0001/outcome.json").read_text())["max_turns"] == 7
+    assert json.loads(cli("status", "--task-dir", turns).stdout)["max_turns"] == 7
+    cli("resume", "--task-dir", turns, "--prompt-file", prompt)
+    argv = json.loads((turns / "attempts/0002/argv.json").read_text())
+    assert argv[argv.index("--max-turns") + 1] == "7"
+    assert json.loads((turns / "state.json").read_text())["max_turns"] == 7
+    cli("resume", "--task-dir", turns, "--prompt-file", prompt, "--max-turns", "9")
+    argv = json.loads((turns / "attempts/0003/argv.json").read_text())
+    assert argv[argv.index("--max-turns") + 1] == "9"
+    assert json.loads((turns / "state.json").read_text())["max_turns"] == 9
+
+    default_turns = root / "default-turns"
+    cli(*start_args(default_turns))
+    assert json.loads((default_turns / "state.json").read_text())["max_turns"] == 200
+    argv = json.loads((default_turns / "attempts/0001/argv.json").read_text())
+    assert argv[argv.index("--max-turns") + 1] == "200"
+    # A legacy state written before the option existed resumes at the 200-turn default.
+    state = json.loads((default_turns / "state.json").read_text())
+    del state["max_turns"]
+    (default_turns / "state.json").write_text(json.dumps(state))
+    cli("resume", "--task-dir", default_turns, "--prompt-file", prompt)
+    argv = json.loads((default_turns / "attempts/0002/argv.json").read_text())
+    assert argv[argv.index("--max-turns") + 1] == "200"
+    assert json.loads((default_turns / "state.json").read_text())["max_turns"] == 200
+
+    cli(*start_args(root / "invalid-turns"), "--max-turns", "0", expected=2)
+    cli(*start_args(root / "invalid-turns"), "--max-turns", "-3", expected=2)
+    cli(*start_args(root / "invalid-turns"), "--max-turns", "nope", expected=2)
+    cli("start", "--task-dir", root / "dsh-turns", "--cwd", work, "--backend", "dsh",
+        "--executable", fake, "--prompt-file", prompt, "--max-turns", "5", expected=2)
+
+    # Non-success terminal attempts can be reviewed, but never accepted as worker success.
+    feedback = root / "feedback.md"
+    feedback.write_text("Provider halted at the turn limit; verify the missing output and retry.")
+    (work / "out.txt").unlink(missing_ok=True)
+    failed = root / "failed"
+    prompt.write_text("fail")
+    cli(*start_args(failed), expected=2)
+    state = json.loads((failed / "state.json").read_text())
+    assert state["status"] == "failed"
+    provider = json.loads((failed / "attempts/0001/result.json").read_text())
+    assert provider["is_error"] and provider["subtype"] == "error_max_turns"
+    assert "error_max_turns" in state["error"] and "turn limit reached" in state["error"]
+    assert not (failed / "attempts/0001/report.md").exists()
+    cli("review", "--task-dir", failed, "--decision", "accepted", "--evidence-file", feedback, expected=2)
+    assert json.loads((failed / "state.json").read_text())["status"] == "failed"
+
+    # A live observed process blocks review even though the attempt is terminal.
+    live = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+    try:
+        state = json.loads((failed / "state.json").read_text())
+        state["known_processes"] = [processes()[live.pid]]
+        (failed / "state.json").write_text(json.dumps(state))
+        cli("review", "--task-dir", failed, "--decision", "needs_work",
+            "--evidence-file", feedback, expected=2)
+    finally:
+        live.kill()
+        live.wait()
+    state = json.loads((failed / "state.json").read_text())
+    state["known_processes"] = []
+    (failed / "state.json").write_text(json.dumps(state))
+
+    # A changed workspace also blocks review until it matches after.json again.
+    (work / "out.txt").write_text("tampered after failure")
+    cli("review", "--task-dir", failed, "--decision", "needs_work",
+        "--evidence-file", feedback, expected=2)
+    (work / "out.txt").unlink()
+    cli("review", "--task-dir", failed, "--decision", "needs_work", "--evidence-file", feedback)
+    assert json.loads((failed / "state.json").read_text())["status"] == "needs_work"
+    outcome = json.loads((failed / "attempts/0001/outcome.json").read_text())
+    assert outcome["status"] == "failed" and outcome["error"]
+    cli("resume", "--task-dir", failed)
+    state = json.loads((failed / "state.json").read_text())
+    assert state["attempt"] == 2 and state["status"] == "awaiting_review"
+
+    # Failed -> blocked also flows through the same gate, then requires a decision.
+    (work / "out.txt").unlink(missing_ok=True)
+    blocked_fail = root / "failed-blocked"
+    prompt.write_text("fail")
+    cli(*start_args(blocked_fail), expected=2)
+    cli("review", "--task-dir", blocked_fail, "--decision", "blocked", "--evidence-file", feedback)
+    assert json.loads((blocked_fail / "state.json").read_text())["status"] == "blocked"
+    cli("resume", "--task-dir", blocked_fail, expected=2)
+    prompt.write_text("success")
+    cli("resume", "--task-dir", blocked_fail, "--prompt-file", prompt)
+    assert json.loads((blocked_fail / "state.json").read_text())["status"] == "awaiting_review"
+
+    # Failed -> revise reuses the same review gate (needs_work) before resubmitting.
+    (work / "out.txt").unlink(missing_ok=True)
+    revised = root / "failed-revise"
+    prompt.write_text("fail")
+    cli(*start_args(revised), expected=2)
+    cli("revise", "--task-dir", revised, "--evidence-file", feedback, "--max-turns", "11")
+    state = json.loads((revised / "state.json").read_text())
+    assert state["attempt"] == 2 and state["status"] == "awaiting_review"
+    assert state["max_turns"] == 11
+    assert (revised / "attempts/0001/review.md").read_text() == feedback.read_text()
+
     before = snapshot(work)
     (work / "out.txt").unlink()
     assert changed(before, snapshot(work)) == ["out.txt"]
