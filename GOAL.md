@@ -1,68 +1,70 @@
-# freetoken 整体目标
+# freetoken Overall Goal
 
-建立日期：2026-09-11
+**English** | [简体中文](GOAL.md.cn)
 
-状态：Complete（2026-09-11）。A–E 已完成，证据见下表与实验总表；适用边界保留在交付说明。
+Created: 2026-09-11
 
-## 目标
+Status: Complete (2026-09-11). Phases A–E are complete. Evidence is linked below and in the experiment index; applicability limits remain documented in the delivery notes.
 
-交付一套能带到其他开发项目使用的最小派工机制：Codex 负责规划、任务划分、判断与独立验收，CodeBuddy 和 dsh 负责执行。让任务从派发、观察、收取结果到原会话返工可靠闭环，在质量达标的前提下，通过实测优化协调消耗和完成时间。
+## Objective
 
-不预设缓存命中率或节省比例，不把客户端费用 0 当作免费，不把工人自报完成当作验收通过。
+Deliver a minimal delegation workflow that can be reused across development projects. Codex owns planning, task boundaries, decisions, and independent verification; CodeBuddy and dsh execute the work. Establish a reliable cycle from dispatch and progress observation through result collection and corrections in the original session. Improve coordination overhead and completion time through measurement, subject to meeting the required quality bar.
 
-## 建立 Goal 时的起点（历史）
+Do not assume cache-hit rates or savings. Do not interpret a client-reported cost of zero as free usage, or a worker's claim of completion as successful acceptance.
 
-CodeBuddy 已完成首次执行、实时事件、独立验收、原会话增量修改、取消及取消后恢复。首次执行曾在 300 秒预算到期时未完成，后续原会话续做成功；失败历史保留。
+## Starting point when this goal was created (historical)
 
-下一项为既有计划步骤 7：自动预算超时与恢复。dsh ACP 目前只有本机文档能力证据，尚无端到端运行结果。
+CodeBuddy had completed initial execution, live events, independent verification, incremental changes in the original session, cancellation, and recovery after cancellation. Its first execution had not completed within the 300-second budget; continuation in the original session later succeeded. The failed attempt was preserved.
 
-## 阶段与完成标准
+The next item was step 7 of the existing plan: automatic budget expiry and recovery. At that point, dsh ACP had only local documentation evidence of its capabilities, with no end-to-end execution results.
 
-| 阶段 | 工作 | 完成标准 |
+## Phases and completion criteria
+
+| Phase | Work | Completion criteria |
 |---|---|---|
-| A 接入可靠性 | 完成 CodeBuddy 步骤 7，验证 dsh ACP 的创建、进度、结果、续接、取消与恢复；复测必要路径 | 两个后端每项能力有独立证据；关键缺口得到修复，或明确阻塞及所缺条件，不掩盖失败 |
-| B 最小可复用机制 | 基于验证结果编写精简 skill 与必要脚本，优先复用 CLI/ACP 原生能力 | 能派工、查状态、收结果、取消、准确续接；任务/会话/轮次可追溯；进程与状态异常不触发盲目重复写入 |
-| C 实际复用 | 在两个独立小型 Git 项目中运行规划—执行—返工—验收 | 不依赖当前实验目录的硬编码；保护已有修改；修改和验收证据可查；用户有明确调用方式 |
-| D 效率验证 | 代表性任务比较工作包粒度、顺序执行与两个独立工人并行 | 记录总完成时间、通过率、返工、协调开销及可得 usage；区分模型差异、冷/热会话和累计/增量字段；只对证据覆盖的条件给建议 |
-| E 交付 | 整理可运行入口、安装/使用说明、实验汇总和能力限制 | 新项目能按说明复用；必要检查通过；失败与未测项显式列出 |
+| A: Integration reliability | Complete CodeBuddy step 7; verify dsh ACP session creation, progress, results, continuation, cancellation, and recovery; repeat necessary paths | Each capability has separate evidence for both backends. Critical gaps are fixed or explicitly identified as blocked with the missing conditions stated. Failures remain visible. |
+| B: Minimal reusable mechanism | Build a concise skill and necessary scripts from the findings, preferring native CLI/ACP capabilities | Dispatch, status, result collection, cancellation, and exact-session continuation work. Tasks, sessions, and attempts are traceable. Process or state anomalies do not trigger blind duplicate writes. |
+| C: Practical reuse | Run planning, execution, correction, and acceptance in two independent small Git projects | No hardcoded dependence on the current experiment directory. Existing changes are protected, changes and verification evidence are inspectable, and users have a clear invocation method. |
+| D: Efficiency validation | Compare work-package granularity, sequential execution, and two independent workers in parallel on representative tasks | Record total completion time, pass rate, corrections, coordination overhead, and available usage. Distinguish model differences, cold/warm sessions, and cumulative/incremental counters. Recommendations stay within the evidence. |
+| E: Delivery | Assemble runnable entry points, installation and usage instructions, experiment summaries, and limitations | A new project can follow the instructions. Necessary checks pass. Failures and untested items are explicitly listed. |
 
-默认交付形态是 skill 加薄的运行控制脚本。只有实验表明有必要时增加其他组件；不先建平台、数据库、看板或后台常驻服务。所有阶段必须服务于上述目标，不扩展到自动部署或外部发布。
+The default deliverable is a skill with thin execution-control scripts. Add other components only when experiments demonstrate a need; do not begin with a platform, database, dashboard, or persistent background service. Every phase must serve this objective without expanding into automatic deployment or external publication.
 
-## 执行规则
+## Execution rules
 
-权限方向更新（用户明确要求，2026-09-11）：本机 dsh、CodeBuddy 已按完整权限使用，暂时尽量不让权限干扰。后续优先沿用完整权限；不再额外设置狭窄工具白名单或将权限加固作为交付前置门槛。通过独立实验/工作目录、明确修改范围和事后 diff/哈希检查保护工作。它们不是强制权限沙箱。只有实际需要时才考虑临时目录与指定目录的权限限制，或在存在具体越界风险时请求所缺决策。
+Permission policy update, explicitly requested by the user on 2026-09-11: local dsh and CodeBuddy already run with full permissions, and permissions should interfere as little as possible for now. Continue using full permissions rather than introducing narrow tool allowlists or making permission hardening a prerequisite for delivery. Protect work through isolated experiment/work directories, explicit change boundaries, and post-execution diff/hash checks. These are not enforced permission sandboxes. Consider temporary-directory or path restrictions only when actually needed, and request a missing decision when a concrete out-of-scope risk requires one.
 
-既有受限权限实验结果保留，后续完整权限实验明确记录条件变化，不混作相同条件的性能对照。
+Preserve earlier restricted-permission experiment results. Record the changed conditions for subsequent full-permission experiments; do not present them as performance comparisons under identical conditions.
 
-- 用户已要求按整体 Goal 执行：后续按阶段推进，不再要求每个小步骤回复“继续”。重大范围变化、实际阻塞所缺信息或超出既有授权的动作再询问。
-- 上述规则取代初始实验计划的“每步等待继续”，其他验收条件和保留失败记录的要求不变。
-- 每次实验结束更新 RESULTS.md，另建 run 记录；不覆盖历史。阶段完成或重要异常时报告结果。
-- 故障时先核实旧执行是否停止，再决定续接或重试；每次重试都有单独轮次和预算，不无限尝试。
-- 原会话保留适用的背景与结果；进度仅向 Codex 返回必要摘要，证据可按需读取。
-- 一个会话同一时刻只有一个执行请求；并行写入使用明确独立工作区及整合验收。
-- 总成本、订阅额度、缓存和 token 分别记录。无法获得或无法归属到本次实验的指标标记不可用。
-- 持续记录不等于创建定时监控；目前没有无人值守自动化。
-- 保留无关文件和用户配置；工作区代码修改需对应验收，实验记录需对应实际观察。
+- The user requested execution against the overall goal. Proceed by phase without requiring “continue” after every small step. Ask only for major scope changes, information needed to resolve an actual blocker, or actions beyond existing authorization.
+- This replaces the initial experiment plan's requirement to wait after every step. Other acceptance criteria and requirements to retain failures remain unchanged.
+- Update RESULTS.md after each experiment and create a separate run record; do not overwrite history. Report phase completion and significant anomalies.
+- After a failure, first verify whether the old execution has stopped before deciding to continue or retry. Each retry has its own attempt and budget; do not retry indefinitely.
+- Preserve relevant context and results in the original session. Return only necessary progress summaries to Codex; retrieve supporting evidence as needed.
+- Allow only one execution request per session at a time. Parallel writes require explicitly separate workspaces and integration checks.
+- Record total cost, subscription quota, cache, and tokens separately. Mark metrics unavailable when they cannot be obtained or attributed to the experiment.
+- Continuous recordkeeping does not imply scheduled monitoring. No unattended automation is in place.
+- Preserve unrelated files and user configuration. Workspace code changes require corresponding verification; experiment records must reflect actual observations.
 
-## 完成判定
+## Completion decision
 
-仅在 A–E 所需工作完成、复用验证通过、已知限制已记录后，整体 Goal 才可标记完成。预算或时间用尽不能视为完成；某个后端尚未可用时，明确其阻塞，不将另一个后端通过替代它。
+Mark the overall goal complete only after the required work in A–E is finished, reuse verification passes, and known limitations are documented. Exhausting time or budget does not count as completion. If one backend is not yet usable, identify its blocker rather than substituting the other backend's success.
 
-## 资料入口
+## References
 
-- [派工闭环设计](docs/002-dispatch-lifecycle.md)
-- [单工人实验计划](docs/003-experiment-plan-v1.md)
-- [实验总表](experiments/RESULTS.md)
-- [参考资料](references/README.md)
+- [Dispatch lifecycle design](docs/002-dispatch-lifecycle.md)
+- [Single-worker experiment plan](docs/003-experiment-plan-v1.md)
+- [Experiment index](experiments/RESULTS.md)
+- [Reference materials](references/README.md)
 
-## 完成证据（2026-09-11）
+## Completion evidence (2026-09-11)
 
-| 阶段 | 结论与入口 |
+| Phase | Conclusion and evidence |
 |---|---|
-| A | 两后端原始闭环及各两次统一脚本完整复测通过；[重复记录](experiments/runs/2026-09-11-repeat-lifecycle-01/record.md) |
-| B | [SKILL.md](SKILL.md) 与 [运行脚本](scripts/freetoken.py)；协议、互斥、崩溃、范围、超时及验收检查通过 |
-| C | [两独立项目](experiments/runs/2026-09-11-runner-reuse-01/record.md) 均完成首次、增量、独立验收并保留用户脏修改 |
-| D | [CodeBuddy](experiments/runs/2026-09-11-benchmark-codebuddy-01/record.md)、[dsh](experiments/runs/2026-09-11-benchmark-dsh-01/record.md) 单次对照完成；上游 502 原样记录并单独恢复，不推断稳定收益 |
-| E | [使用说明](README.md)、[交付结论与限制](docs/004-delivery.md)、[本地检查](experiments/runs/2026-09-11-delivery-checks-01/record.md)；本机 skill 链接可调用 |
+| A | The original lifecycle and two complete repetitions through the unified runner passed for each backend. See the [repeat record](experiments/runs/2026-09-11-repeat-lifecycle-01/record.md). |
+| B | [SKILL.md](SKILL.md) and the [runner](scripts/freetoken.py) are available. Protocol, mutual exclusion, crash, scope, timeout, and review checks passed. |
+| C | [Two independent projects](experiments/runs/2026-09-11-runner-reuse-01/record.md) completed initial and incremental work with independent verification while preserving existing uncommitted user changes. |
+| D | Single-sample comparisons for [CodeBuddy](experiments/runs/2026-09-11-benchmark-codebuddy-01/record.md) and [dsh](experiments/runs/2026-09-11-benchmark-dsh-01/record.md) are complete. An upstream 502 failure was preserved and recovered separately; no stable benefit is inferred. |
+| E | [Usage instructions](README.md), [delivery conclusions and limitations](docs/004-delivery.md), and [local checks](experiments/runs/2026-09-11-delivery-checks-01/record.md) are available. The local skill entry point is callable. |
 
-未现场验证的事项：新 Codex 任务的自动发现、大型真实项目、跨平台、冲突分支整合、跨机器会话迁移、供应商费用与 Codex 额度归属。上述事项不属于本轮小型跨项目可运行交付的通过声明。
+Items not verified in the field at this completion checkpoint: automatic discovery in a new Codex task, large real-world projects, cross-platform operation, conflicting-branch integration, cross-machine session migration, and attribution of provider costs or Codex quota. These are outside the passing claims for this small, reusable cross-project delivery.

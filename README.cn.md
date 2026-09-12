@@ -88,7 +88,7 @@ python3 -B scripts/test_acp_stdio.py
 python3 -B scripts/test_freetoken.py
 ```
 
-[交付说明](docs/004-delivery.md) 汇总结果与边界；[实验总表](experiments/RESULTS.md) 保留成功、失败、取消、恢复及对照记录；[整体 Goal](GOAL.md) 定义完成标准。微型项目通过不等于大型真实项目已验收。客户端 usage 和缓存字段未完成账单归属校准，报告费用 0 不表示免费，也不能据此计算 Codex 订阅额度节省。
+[交付说明](docs/004-delivery.md) 汇总结果与边界；[实验总表](experiments/RESULTS.md) 保留成功、失败、取消、恢复及对照记录；[整体 Goal](GOAL.md.cn) 定义完成标准。微型项目通过不等于大型真实项目已验收。客户端 usage 和缓存字段未完成账单归属校准，报告费用 0 不表示免费，也不能据此计算 Codex 订阅额度节省。
 
 历史设计：[讨论](docs/001-discussion.md)、[派工闭环](docs/002-dispatch-lifecycle.md)、[初始实验计划](docs/003-experiment-plan-v1.md)、[参考来源](references/README.md)。
 
