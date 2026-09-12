@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import selectors
 import shutil
 import signal
@@ -22,6 +23,8 @@ from acp_stdio import ACP
 ACTIVE = {"starting", "running", "stopping"}
 DEFAULT_MAX_TURNS = 200
 NON_SUCCESS_TERMINAL = {"failed", "timed_out", "cancelled", "interrupted"}
+REPORT_LIMIT = 6000
+REPORT_OPEN, REPORT_CLOSE = "<freetoken-report>", "</freetoken-report>"
 
 
 def save(path, value):
@@ -109,6 +112,52 @@ def result_detail(result, limit=400):
     return "; ".join(parts)
 
 
+def summary(state, folder):
+    """Bounded caller exposure; details and exact long paths remain in state.json."""
+    def short(value, limit=240):
+        if value is None:
+            return None
+        text = str(value)
+        return text if len(text) <= limit else text[:limit] + "…[truncated]"
+
+    attempt = Path(state["attempt_dir"]) if state.get("attempt_dir") else None
+    result = {key: short(state.get(key)) for key in
+              ("task_id", "status", "observed_status", "backend", "model", "session_id")}
+    result.update(task_dir=short(folder), attempt=state.get("attempt"),
+                  attempt_dir=short(attempt), elapsed_s=state.get("elapsed_s"),
+                  controller_alive=state.get("controller_alive"), worker_alive=state.get("worker_alive"),
+                  cleanup_required=bool(state.get("cleanup_required")), error=short(state.get("error"), 400),
+                  report_status=state.get("report_status", "legacy_unverified"),
+                  independent_verification=None)
+    for name in ("changes", "out_of_scope"):
+        values = state.get(name, [])
+        result[name + "_count"] = len(values)
+        result[name + "_sample"] = [short(value, 120) for value in values[:5]]
+    for key, filename in (("report", "report.md"), ("usage", "usage.json")):
+        path = attempt / filename if attempt else None
+        result[key] = short(path) if path and path.is_file() else None
+    return result
+
+
+def final_report(messages):
+    """Framing is a worker convention, not ACP end_turn or caller acceptance."""
+    messages = list(messages)
+    opens = sum(text.count(REPORT_OPEN) for text in messages)
+    closes = sum(text.count(REPORT_CLOSE) for text in messages)
+    if opens == closes == 0:
+        return "unstructured", None
+    if opens != 1 or closes != 1:
+        return "invalid", None
+    for index, text in enumerate(messages):
+        match = re.search(re.escape(REPORT_OPEN) + r"(.*?)" + re.escape(REPORT_CLOSE), text, re.S)
+        if match:
+            report = match.group(1).strip()
+            if (index == len(messages) - 1 and match.end() == len(text.rstrip())
+                    and report and len(match.group(1).encode("utf-8")) <= REPORT_LIMIT):
+                return "framed", report
+    return "invalid", None
+
+
 def workspace_lock_path(cwd):
     folder = Path.home() / ".local/state/freetoken/locks"
     folder.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -134,8 +183,9 @@ def lock_record(stream, value):
 
 
 class Run:
-    def __init__(self, folder, state, prompt, budget):
+    def __init__(self, folder, state, prompt, budget, output="summary"):
         self.folder, self.state = folder, state
+        self.output = output
         self.cwd = Path(state["cwd"])
         self.start = time.monotonic()
         self.budget = budget
@@ -157,7 +207,7 @@ class Run:
                      started_at=time.time(), budget_seconds=budget, last_event=None,
                      attempt_dir=str(self.attempt), error=None, known_processes=[],
                      elapsed_s=None, ended_at=None, worker_exit=None,
-                     changes=[], out_of_scope=[], cleanup_required=[])
+                     changes=[], out_of_scope=[], cleanup_required=[], report_status="missing")
         self.persist()
 
     def persist(self):
@@ -169,7 +219,8 @@ class Run:
             f.write(json.dumps(event, ensure_ascii=False) + "\n")
         self.state["last_event"] = event
         self.persist()
-        print(json.dumps(event, ensure_ascii=False), flush=True)
+        if self.output == "events":
+            print(json.dumps(event, ensure_ascii=False), flush=True)
 
     def attach(self, process):
         self.proc = process
@@ -299,6 +350,7 @@ def codebuddy(run):
                             save(run.attempt / "result.json", item)
                             if not item.get("is_error") and item.get("subtype") == "success":
                                 (run.attempt / "report.md").write_text(str(item.get("result", "")))
+                                state["report_status"] = "provider_final"
                             save(run.attempt / "usage.json", {
                                 "source": "CodeBuddy result; accounting scope not verified",
                                 "usage": item.get("usage"), "modelUsage": item.get("modelUsage"),
@@ -318,6 +370,8 @@ def codebuddy(run):
 
 def dsh(run):
     state, usage = run.state, []
+    messages = {}
+    last_message = None
 
     def startup_tick():
         run.tick()
@@ -325,13 +379,22 @@ def dsh(run):
             raise TimeoutError("dsh stopped before prompt submission")
 
     def update(params):
+        nonlocal last_message
         if state.get("session_id") and params["sessionId"] != state["session_id"]:
             raise RuntimeError("dsh update belongs to a different session")
         item = params["update"]
         kind = item["sessionUpdate"]
         if kind == "agent_message_chunk" and item.get("content", {}).get("type") == "text":
-            with (run.attempt / "report.md").open("a") as f:
-                f.write(item["content"]["text"])
+            text = item["content"]["text"]
+            with (run.attempt / "raw/assistant-stream.txt").open("a") as f:
+                f.write(text)
+            with (run.attempt / "raw/assistant-chunks.jsonl").open("a") as f:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+            # Explicit message IDs cannot be joined to fabricate one final block.
+            key = item.get("msgId")
+            messages[key] = messages.get(key, "") + text
+            if text.strip():
+                last_message = key
         elif kind in {"tool_call", "tool_call_update"}:
             run.event(kind, name=item.get("title"), status=item.get("status"), tool_id=item.get("toolCallId"))
         elif kind == "usage_update":
@@ -400,6 +463,12 @@ def dsh(run):
         return run.stop_reason
     if result.get("stopReason") != "end_turn":
         raise RuntimeError(f"dsh stopped without completion: {result}")
+    # The frame must end the last non-whitespace assistant update, not merely
+    # some earlier message whose completion may be contradicted by a later one.
+    last_text = messages.pop(last_message, "")
+    state["report_status"], report = final_report([*messages.values(), last_text])
+    if report is not None:
+        (run.attempt / "report.md").write_text(report)
     return "awaiting_review"
 
 
@@ -473,7 +542,12 @@ def dispatch(args):
                        "evidence, options with consequences, and your recommendation; do not assume approval "
                        "or expand scope. Finish the response so the caller can decide. "
                        "Report blockers rather than retrying indefinitely.")
-            run = Run(folder, state, prompt, args.budget)
+            if state["backend"] == "dsh":
+                prompt += (f"\nEnd with exactly one {REPORT_OPEN} final delivery {REPORT_CLOSE} block, "
+                           f"at most {REPORT_LIMIT} UTF-8 bytes inside it, in one assistant message. "
+                           "Include actual changes, checks/results, blockers and pending work. "
+                           "Do not use these delimiters in progress text or examples.")
+            run = Run(folder, state, prompt, args.budget, args.output)
             lock_record(lease, {"active": True, "task_dir": str(folder)})
             old_handlers = {s: signal.signal(s, lambda *_: run.request_stop("cancelled")) for s in (signal.SIGINT, signal.SIGTERM)}
             try:
@@ -506,9 +580,7 @@ def dispatch(args):
             run.persist()
             save(run.attempt / "outcome.json", state)
             lock_record(lease, {"active": bool(remaining), "task_dir": str(folder)})
-    print(json.dumps({"task_dir": str(folder), "status": state["status"],
-                      "session_id": state["session_id"], "attempt": state["attempt"],
-                      "report": str(run.attempt / "report.md"), "error": state.get("error")}, ensure_ascii=False))
+    print(json.dumps(summary(state, folder), ensure_ascii=False))
     return 0 if state["status"] == "awaiting_review" else 2
 
 
@@ -525,7 +597,8 @@ def inspect_task(args):
                 "attempt", "attempt_dir", "budget_seconds", "max_turns", "elapsed_s", "last_event",
                 "controller_alive", "worker_alive", "changes", "out_of_scope", "error",
                 "one_shot", "max_attempts", "session_closed", "cleanup")
-        print(json.dumps({key: state[key] for key in keys if key in state}, ensure_ascii=False, indent=2))
+        data = summary(state, folder) if args.summary else {key: state[key] for key in keys if key in state}
+        print(json.dumps(data, ensure_ascii=False, indent=None if args.summary else 2))
     elif args.command == "cancel":
         if state["status"] not in ACTIVE or not is_alive(state.get("controller")):
             raise RuntimeError("No confirmed live controller; inspect status instead of guessing a PID")
@@ -598,7 +671,8 @@ def inspect_task(args):
                 state["status"] = args.decision
             (Path(state["attempt_dir"]) / f"{args.command}.md").write_text(note)
             save(folder / "state.json", state)
-            print(state["status"])
+            if not getattr(args, "quiet", False):
+                print(state["status"])
     return 0
 
 
@@ -612,6 +686,7 @@ def main():
             if name != "revise":
                 p.add_argument("--prompt-file", required=name == "start")
             p.add_argument("--budget", type=float, default=300)
+            p.add_argument("--output", choices=("summary", "events"), default="summary")
             p.add_argument("--max-attempts", type=int, help="Total task attempts; default 3, explicit extension allowed")
             p.add_argument("--max-turns", type=int, help="CodeBuddy turn limit; default 200, retained when omitted, codebuddy only")
         if name == "start":
@@ -625,6 +700,8 @@ def main():
             p.add_argument("--evidence-file", required=True)
         if name == "cleanup":
             p.add_argument("--purge-raw", action="store_true", help="Delete this task's raw logs; keep reports and reviews")
+        if name == "status":
+            p.add_argument("--summary", action="store_true", help="Bounded caller summary; full state remains local")
         if name == "review":
             p.add_argument("--decision", choices=("accepted", "needs_work", "blocked"), required=True)
     args = parser.parse_args()
@@ -641,11 +718,11 @@ def main():
                 if backend == "dsh":
                     raise ValueError("--max-turns is only valid for the codebuddy backend")
             inspect_task(argparse.Namespace(command="review", task_dir=args.task_dir,
-                         decision="needs_work", evidence_file=args.evidence_file))
+                         decision="needs_work", evidence_file=args.evidence_file, quiet=args.output == "summary"))
             args.command, args.prompt_file = "resume", None
         return dispatch(args) if args.command in ("start", "resume") else inspect_task(args)
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
-        print(json.dumps({"error": str(error)}, ensure_ascii=False))
+        print(json.dumps({"error": str(error)[:400]}, ensure_ascii=False))
         return 2
 
 

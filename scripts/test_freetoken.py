@@ -61,6 +61,18 @@ with tempfile.TemporaryDirectory(prefix="freetoken-test-") as directory:
                 "--executable", fake, "--model", "fake", "--prompt-file", prompt,
                 "--budget", str(budget), "--allow", "out.txt", "--allow", "ready"]
 
+    def wait_registered_worker(task, process, deadline):
+        # Child 'ready' precedes the controller's persisted identity. Killing at
+        # that marker alone tests an unobserved launch, not the recorded-writer gate.
+        while True:
+            assert process.poll() is None and time.monotonic() < deadline
+            path = task / "state.json"
+            state = json.loads(path.read_text()) if path.exists() else {}
+            worker = state.get("worker")
+            if (work / "ready").exists() and worker and state.get("session_confirmed") and is_alive(worker):
+                return worker
+            time.sleep(.01)
+
     task = root / "success"
     prompt.write_text("success")
     cli(*start_args(task))
@@ -178,16 +190,39 @@ for line in sys.stdin:
     # Killing the controller releases flock, but must not release its writer lease.
     (work / "ready").unlink(missing_ok=True)
     task = root / "crashed"
+    release_attach = root / "release-attach"
+    delayed_controller = root / "delayed-controller.py"
+    delayed_controller.write_text(f'''import sys, time
+from pathlib import Path
+sys.path.insert(0, {str(RUNNER.parent)!r})
+import freetoken
+original = freetoken.processes
+calls = 0
+def delayed_processes():
+    global calls
+    calls += 1
+    if calls == 2:  # Run controller identity first, then worker attach.
+        deadline = time.monotonic() + 10
+        while not Path({str(release_attach)!r}).exists():
+            assert time.monotonic() < deadline, 'test did not release attach'
+            time.sleep(.01)
+    return original()
+freetoken.processes = delayed_processes
+raise SystemExit(freetoken.main())
+''')
     with (root / "crashed.log").open("w") as log:
-        process = subprocess.Popen([sys.executable, "-B", str(RUNNER), *map(str, start_args(task))],
+        process = subprocess.Popen([sys.executable, "-B", str(delayed_controller), *map(str, start_args(task))],
                                    stdout=log, stderr=log)
         worker = None
         try:
             deadline = time.monotonic() + 10
             while not (work / "ready").exists():
                 assert process.poll() is None and time.monotonic() < deadline
-                time.sleep(.05)
-            worker = json.loads((task / "state.json").read_text())["worker"]
+                time.sleep(.01)
+            # Deterministically expose the former race before releasing attach.
+            assert json.loads((task / "state.json").read_text())["worker"] is None
+            release_attach.touch()
+            worker = wait_registered_worker(task, process, deadline)
             process.kill()
             process.wait()
             cli(*start_args(root / "crash-collision"), expected=2)
@@ -201,9 +236,10 @@ for line in sys.stdin:
             # Recovery proves stopped processes, not a missing worker after-snapshot.
             cli("review", "--task-dir", task, "--decision", "needs_work", "--evidence-file", evidence, expected=2)
         finally:
+            release_attach.touch()
             if process.poll() is None:
-                process.kill()
-                process.wait()
+                process.terminate()
+                process.wait(timeout=15)
             if worker and is_alive(worker):
                 os.kill(worker["pid"], signal.SIGKILL)
     prompt.write_text("outside")

@@ -1,0 +1,64 @@
+{
+  "schema": "freetoken-offline-round/1",
+  "date": "2026-09-12",
+  "baseline_head": "bd1e8625257be653ec4386896042d6ce6f46b412",
+  "candidate_state": "offline engineering complete and independently reviewed; uncommitted at verification time; live calibration pending authorization",
+  "baseline_skill_sha256": "d2ae80c3366097c711588bb909e75241e90ac7941a1ac2f2ca2e02bb5195be4c",
+  "candidate_sha256": {
+    "SKILL.md": "b99e9a936dd7ea2cc596dc46d34f0afc1dddb15e8bb473e56208f31b72f47a7f",
+    "scripts/freetoken.py": "300b501157403c24bd47baa179a7c1a3be29ea493532a755c95d2848d73d9408",
+    "scripts/acp_stdio.py": "802ae388333dccd0b0bd669e454f4c87edaca350d998c7677afbd9e12e026a54",
+    "scripts/test_freetoken.py": "c8a31c2d31bf05b3676298dace7582aaeb2970d843fd8b15812354acf10717ab",
+    "scripts/test_output.py": "e30a4204c169bb11a5fb266c36606e2030de6f63922aff510c815a5696cabd70",
+    "experiments/codex_meter.py": "7c36bed803d2f600648c837ee8d771e8c351002a95537428b669e5c12d34ce68",
+    "experiments/test_codex_meter.py": "d4b8dedfda81bcbb3c42d6093aab62e54d261e0f0e12078a5968f7c5f5fcdc74",
+    "references/runtime.md": "995f303cd4119c799543cb48880adb944e57d7227bb5f43b45363051b31ca85b",
+    "references/recovery.md": "fa3c5b885c36f80f5ba14d4dda8338dca2fed02de0e1e39e43cf593212329fa0",
+    "references/measurement.md": "6a02a2913395be1cfd2fa32003f125cb83a910e91787f5bc6f2d94ce2f35b2a3"
+  },
+  "versions_observed": {"codebuddy": "2.149.0", "codex_cli": "0.153.4"},
+  "exposure_bytes": {
+    "baseline_skill": 18934,
+    "candidate_skill": 4408,
+    "candidate_skill_and_three_references": 12849,
+    "meaning": "UTF-8 file sizes only; not token usage or subscription savings"
+  },
+  "baseline_observations": [
+    "Caller observed one crash/recover lifecycle failure, immediate rerun passed; retained, not erased.",
+    "Worker baseline 30-run loop reported fails=0 with exit 0; not evidence the race is absent.",
+    "Worker background request was rejected and later diagnostic stalled; cancelled at 791.122 seconds, zero repository changes, reviewed needs_work after stopped-process/snapshot gate. No worker-success credit."
+  ],
+  "checks": [
+    {"command": "python3 -B scripts/test_acp_stdio.py", "exit_code": 0},
+    {"command": "python3 -B scripts/test_freetoken.py", "exit_code": 0, "additional_repeat": "3 consecutive passes after deterministic attach fixture"},
+    {"command": "python3 -B scripts/test_output.py", "exit_code": 0},
+    {"command": "python3 -B experiments/test_codex_meter.py", "exit_code": 0},
+    {"command": "skill-creator quick_validate.py .", "exit_code": 0},
+    {"command": "git diff --check", "exit_code": 0}
+  ],
+  "independent_task_review": {
+    "verdict": "pass",
+    "model_requested": "gpt-5.6-terra high",
+    "checks": "All four offline test scripts rerun; fixes independently re-reviewed.",
+    "resolved": ["late or empty thread identity", "item outside active turn", "runner release dependency", "assistant text after final report frame"],
+    "skill_forward_test": ["tiny known typo: direct", "bounded parser migration: delegate and independently review", "material choice: blocked with explicit decision", "timed-out partial worker: inspect before retry", "one-shot: no resume or automatic replacement"]
+  },
+  "final_whole_change_review": {
+    "verdict": "pass",
+    "model_requested": "gpt-5.6-sol high",
+    "scope": "cross-module composition, frozen scope, installation references, evidence and claim boundaries",
+    "checks": "All four offline scripts, diff whitespace check, both README verification suites, and all ten source hashes verified on final candidate.",
+    "resolved": "Both README verification blocks now document all four first-round checks."
+  },
+  "not_run": [
+    "new live Codex caller usage calibration",
+    "new live dsh/CodeBuddy candidate output compatibility",
+    "paired A/B/C quality and savings experiment",
+    "large-stream memory stress",
+    "unobserved/detached process stop guarantee"
+  ],
+  "current_conversation_caller_tokens": null,
+  "codex_subscription_savings": null,
+  "installed_skill_entry_updated": false,
+  "publication_at_verification": "not committed or pushed; subsequent publication is established by Git history and remote refs"
+}

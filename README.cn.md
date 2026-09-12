@@ -16,7 +16,7 @@ freetoken 帮助调用者 Codex 委派范围明确的开发工作，同时保留
 
 安装后，在你的项目中输入 `$freetoken` 并描述任务即可。你仍需提前准备可用的 dsh 或 CodeBuddy；安装 skill 不会自动配置这些后端服务。
 
-供执行安装的 Codex 参考：skill 入口是仓库根目录的 `SKILL.md`，运行文件在 `scripts/` 中。将这两部分安装到用户的 Codex skills 目录，命名为 `freetoken` 即可；无需安装参考项目和实验产物。
+供执行安装的 Codex 参考：安装根目录 `SKILL.md`、`scripts/`，以及 `references/runtime.md`、`references/recovery.md`、`references/measurement.md` 三份操作指引，保持相对路径，命名为 `freetoken`。无需安装其他参考项目和实验产物。
 
 ## 前置条件
 
@@ -41,7 +41,9 @@ freetoken 帮助调用者 Codex 委派范围明确的开发工作，同时保留
 
 skill 的运行规则见 [SKILL.md](SKILL.md)。若当前任务尚未发现新 skill，可直接要求读取该文件；安装后的自动发现仍需在新任务确认。
 
-迁移到其他机器时，将 `SKILL.md` 和 `scripts/` 放入 `~/.codex/skills/freetoken/` 即可。已有同名项时先检查，不覆盖；不要链接整个含参考 skill 的仓库。
+迁移时，将 `SKILL.md`、`scripts/` 和上述三份操作指引放入 `~/.codex/skills/freetoken/`，保持相对路径。入口和操作指引须一起同步。已有同名项先检查，不覆盖；不要链接整个含参考 skill 的仓库。
+
+第一轮候选默认输出有界摘要，`--output events` 可恢复诊断事件，`status --summary` 提供紧凑状态；完整事件仍在本地。dsh 全量文本与显式最终报告分离。[调用者计量与待运行校准](docs/008-caller-calibration.md) 默认仅预检，不调用模型。技能/输出变短不是 token 或订阅额度节省证明。
 
 ## 直接运行
 
@@ -86,6 +88,8 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py resume --task-dir <任务
 ```sh
 python3 -B scripts/test_acp_stdio.py
 python3 -B scripts/test_freetoken.py
+python3 -B scripts/test_output.py
+python3 -B experiments/test_codex_meter.py
 ```
 
 [交付说明](docs/004-delivery.md) 汇总结果与边界；[实验总表](experiments/RESULTS.md) 保留成功、失败、取消、恢复及对照记录；[整体 Goal](GOAL.md.cn) 定义完成标准。微型项目通过不等于大型真实项目已验收。客户端 usage 和缓存字段未完成账单归属校准，报告费用 0 不表示免费，也不能据此计算 Codex 订阅额度节省。

@@ -16,7 +16,7 @@ Simply ask Codex:
 
 Then invoke `$freetoken` in your project and describe the task. You still need a working dsh or CodeBuddy backend; installing the skill does not configure those services.
 
-For the installing agent: the skill entry point is the repository-root `SKILL.md`, and its runtime files are in `scripts/`. Install those under the user's Codex skills directory as `freetoken`; reference projects and experiment artifacts are not needed.
+For the installing agent: install root `SKILL.md`, `scripts/`, and the three operating references `references/runtime.md`, `references/recovery.md`, `references/measurement.md` under the user's Codex skills directory as `freetoken`. Other reference projects and experiments are not needed.
 
 ## Prerequisites
 
@@ -35,7 +35,7 @@ The current runner uses full backend permissions. Review the permission and scop
 
 ## Use in another project
 
-For manual installation, copy `SKILL.md` and `scripts/` to `~/.codex/skills/freetoken/`. For local development, `scripts/` can be a link to your checkout; keep the installed `SKILL.md` synchronized. Check an existing installation before replacing it. Do not install the reference projects as additional skills.
+For manual installation, copy `SKILL.md`, `scripts/` and the three operating references listed above to `~/.codex/skills/freetoken/`, preserving their relative paths. For local development, `scripts/` can link to your checkout; synchronize the installed entry and operating references together. Check existing files before replacing them. Do not install reference projects as additional skills.
 
 In a new Codex task, invoke `$freetoken` and specify the project, objective, backend, and allowed changes. For example:
 
@@ -83,9 +83,13 @@ Cancellation and timeout can leave partial edits. Inspect status when process st
 
 ## Verification and evidence
 
+First-round candidate: dispatch defaults to bounded summaries (`--output events` restores diagnostic events); `status --summary` is compact. Detailed events remain local. dsh stream text is separate from explicitly framed final reports. The optional [caller meter and pending calibration](docs/008-caller-calibration.md) defaults to preflight, not model execution. Shorter skill/output does not prove token or subscription savings.
+
 ```sh
 python3 -B scripts/test_acp_stdio.py
 python3 -B scripts/test_freetoken.py
+python3 -B scripts/test_output.py
+python3 -B experiments/test_codex_meter.py
 ```
 
 The [delivery notes](docs/004-delivery.md) summarize results and limitations. The [experiment index](experiments/RESULTS.md) preserves successes, failures, cancellation, recovery, and comparison runs. The [overall goal](GOAL.md) defines completion criteria. These supporting records are currently in Chinese.
