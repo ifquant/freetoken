@@ -115,6 +115,7 @@ with tempfile.TemporaryDirectory(prefix="freetoken-test-") as directory:
     cli("review", "--task-dir", one, "--decision", "accepted", "--evidence-file", evidence)
     cli("resume", "--task-dir", one, "--prompt-file", prompt, expected=2)
     cli("cleanup", "--task-dir", one, "--purge-raw")
+    assert json.loads((one / "state.json").read_text())["cleanup"]["backend_history"] == "not deleted; cleanup only removes this tool's local logs"
     outside = root / "external-logs"
     outside.mkdir()
     (outside / "keep").write_text("not owned by cleanup")

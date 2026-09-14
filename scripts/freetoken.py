@@ -718,7 +718,7 @@ def inspect_task(args):
                     removed.append(str(raw.relative_to(folder)))
             removed = sorted(set(removed) | set(state.get("cleanup", {}).get("removed_raw", [])))
             state["cleanup"] = {"at": time.time(), "removed_raw": removed,
-                                "backend_history": "not deleted; CodeBuddy one-shot disables persistence"}
+                                "backend_history": "not deleted; cleanup only removes this tool's local logs"}
             save(folder / "state.json", state)
             print(json.dumps({"session_closed": True, **state["cleanup"]}))
     else:
