@@ -1,12 +1,14 @@
 """Offline bounded output and dsh report-framing integration checks."""
 
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 
-from freetoken import final_report, summary
+from freetoken import final_report, processes, snapshot, summary
+from task_spec import load as load_spec
 
 
 OPEN, CLOSE = "<freetoken-report>", "</freetoken-report>"
@@ -114,4 +116,87 @@ for line in sys.stdin:
     stdout = cli("revise", "--task-dir", task, "--evidence-file", evidence)
     assert len(stdout.splitlines()) == 1 and json.loads(stdout)["attempt"] == 3
 
-print("PASS: bounded summaries, event opt-in, dsh framing and legacy lifecycle integration")
+    # Verify is read-only and mechanical: passing checks must not accept a failed worker.
+    task = root / "evidence"
+    attempt = task / "attempts/0001"
+    attempt.mkdir(parents=True)
+    preexisting = work / "user.txt"
+    preexisting.write_text("existing dirty user content")
+    before = snapshot(work)
+    target = work / "allowed.txt"
+    target.write_text("worker change")
+    after = snapshot(work)
+    state = {"status": "failed", "cwd": str(work), "attempt_dir": str(attempt),
+             "allow": ["allowed.txt"], "changes": ["allowed.txt"], "out_of_scope": []}
+    state_path = task / "state.json"
+
+    def write_evidence():
+        state_path.write_text(json.dumps(state))
+        (attempt / "before.json").write_text(json.dumps(before))
+        (attempt / "after.json").write_text(json.dumps(after))
+
+    def verify(expected=0):
+        return json.loads(cli("status", "--task-dir", task, "--summary", "--verify", expected=expected))
+
+    write_evidence()
+    state_bytes = state_path.read_bytes()
+    result = verify()
+    assert all(result["evidence_checks"].values()) and result["status"] == "failed"
+    assert result["independent_verification"] is None and state_path.read_bytes() == state_bytes
+    assert preexisting.read_text() == "existing dirty user content"
+    target.write_text("later edit")
+    assert not verify(2)["evidence_checks"]["workspace_matches_after"]
+    target.write_text("worker change")
+    state["changes"] = []
+    write_evidence()
+    assert not verify(2)["evidence_checks"]["recorded_changes_match"]
+    state["changes"] = ["allowed.txt"]
+    state["allow"] = []
+    write_evidence()
+    assert not verify(2)["evidence_checks"]["within_scope"]
+    state["allow"] = ["allowed.txt"]
+    state["known_processes"] = [processes()[os.getpid()]]
+    write_evidence()
+    assert not verify(2)["evidence_checks"]["observed_processes_stopped"]
+    state["known_processes"] = []
+    before["head"] = "different-head"
+    write_evidence()
+    assert not verify(2)["evidence_checks"]["head_unchanged"]
+    before["head"] = after["head"]
+    state["status"] = "running"
+    write_evidence()
+    assert "terminal" in verify(2)["error"]
+    state["status"] = "failed"
+    write_evidence()
+    # One bounded response covers approved commands, including failures and effects.
+    spec_path = root / "acceptance-spec.json"
+    spec = {"goal": "verify", "scope": {"write": ["allowed.txt"]},
+            "acceptance": {"commands": [[sys.executable, "-B", "-c", "print('private check output'); raise SystemExit(5)"]]},
+            "limits": {"check_seconds": 2}}
+
+    def freeze_spec():
+        spec_path.write_text(json.dumps(spec))
+        state.update(spec_path=str(spec_path), spec_sha256=load_spec(spec_path)[1])
+        write_evidence()
+
+    freeze_spec()
+    result = verify(2)
+    assert all(result["evidence_checks"].values()) and result["verification_status"] == "failed"
+    assert result["acceptance_checks"]["failed_sample"] == [{"index": 0, "exit_code": 5, "timed_out": False}]
+    assert "private check output" not in json.dumps(result)
+    spec["acceptance"]["commands"] = [[sys.executable, "-B", "-c", "pass"]]
+    freeze_spec()
+    result = verify()
+    assert result["acceptance_checks"] == {"count": 1, "failed_count": 0, "failed_sample": []}
+    assert result["status"] == "failed" and result["independent_verification"] is None
+    spec["acceptance"]["commands"] = [[sys.executable, "-B", "-c", "from pathlib import Path; Path('allowed.txt').write_text('check changed file')"]]
+    spec_path.write_text(json.dumps(spec))
+    assert "TaskSpec changed" in verify(2)["error"]
+    assert target.read_text() == "worker change"  # Modified spec was not executed.
+    freeze_spec()
+    assert not verify(2)["evidence_checks"]["workspace_matches_after"]
+    target.write_text("worker change")
+    (attempt / "after.json").unlink()
+    assert "error" in verify(2)
+
+print("PASS: bounded summaries, framing, lifecycle and read-only mechanical evidence checks")

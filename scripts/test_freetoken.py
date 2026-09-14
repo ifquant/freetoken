@@ -83,7 +83,7 @@ with tempfile.TemporaryDirectory(prefix="freetoken-test-") as directory:
     (work / "out.txt").write_text("changed after run")
     cli("review", "--task-dir", task, "--decision", "accepted", "--evidence-file", evidence, expected=2)
     (work / "out.txt").write_text("result")
-    cli("review", "--task-dir", task, "--decision", "accepted", "--evidence-file", evidence)
+    cli("review", "--task-dir", task, "--decision", "needs_work", "--evidence-file", evidence)
     cli("resume", "--task-dir", task, "--prompt-file", prompt)
     state = json.loads((task / "state.json").read_text())
     assert state["attempt"] == 2 and state["session_id"] == sid
@@ -101,6 +101,7 @@ with tempfile.TemporaryDirectory(prefix="freetoken-test-") as directory:
     (work / "out.txt").write_text("repaired")
     cli("resume", "--task-dir", task, "--max-attempts", "4")
     cli("review", "--task-dir", task, "--decision", "accepted", "--evidence-file", evidence)
+    cli("resume", "--task-dir", task, "--prompt-file", prompt, expected=2)
     cli("cleanup", "--task-dir", task, "--purge-raw")
     assert not list((task / "attempts").glob("*/raw"))
     assert (task / "attempts/0003/review.md").is_file()
@@ -122,6 +123,35 @@ with tempfile.TemporaryDirectory(prefix="freetoken-test-") as directory:
     cli("cleanup", "--task-dir", one, "--purge-raw", expected=2)
     assert (outside / "keep").read_text() == "not owned by cleanup"
     raw_link.unlink()
+
+    # TaskSpec acceptance requires a current successful verification receipt.
+    (work / "out.txt").unlink(missing_ok=True)
+    spec_path = root / "task-spec.json"
+    spec_path.write_text(json.dumps({
+        "goal": "success spec",
+        "scope": {"write": ["out.txt"]},
+        "acceptance": {"commands": [[sys.executable, "-c", "from pathlib import Path; assert Path('out.txt').read_text() == 'result'"]]},
+        "limits": {"wall_seconds": 10, "check_seconds": 2},
+    }))
+    spec_task = root / "spec-task"
+    cli("start", "--task-dir", spec_task, "--cwd", work, "--backend", "codebuddy",
+        "--executable", fake, "--model", "fake", "--spec", spec_path)
+    assert not spec_path.with_suffix(".compiled.md").exists()
+    cli("review", "--task-dir", spec_task, "--decision", "accepted", "--evidence-file", evidence, expected=2)
+    cli("status", "--task-dir", spec_task, "--summary", "--verify")
+    verification_path = spec_task / "attempts/0001/verification.json"
+    verification = json.loads(verification_path.read_text())
+    verification["verification_status"] = "failed"
+    verification_path.write_text(json.dumps(verification))
+    cli("review", "--task-dir", spec_task, "--decision", "accepted", "--evidence-file", evidence, expected=2)
+    cli("status", "--task-dir", spec_task, "--summary", "--verify")
+    verification = json.loads(verification_path.read_text())
+    verification["spec_sha256"] = "wrong"
+    verification_path.write_text(json.dumps(verification))
+    cli("review", "--task-dir", spec_task, "--decision", "accepted", "--evidence-file", evidence, expected=2)
+    cli("status", "--task-dir", spec_task, "--summary", "--verify")
+    cli("review", "--task-dir", spec_task, "--decision", "accepted", "--evidence-file", evidence)
+    cli("resume", "--task-dir", spec_task, "--prompt-file", prompt, expected=2)
 
     blocked = root / "decision-needed"
     cli(*start_args(blocked))
@@ -292,6 +322,8 @@ raise SystemExit(freetoken.main())
     cli(*start_args(root / "invalid-turns"), "--max-turns", "nope", expected=2)
     cli("start", "--task-dir", root / "dsh-turns", "--cwd", work, "--backend", "dsh",
         "--executable", fake, "--prompt-file", prompt, "--max-turns", "5", expected=2)
+    for invalid_budget in ("nan", "inf", "0", "86400"):
+        cli(*start_args(root / f"invalid-budget-{invalid_budget}"), "--budget", invalid_budget, expected=2)
 
     # Non-success terminal attempts can be reviewed, but never accepted as worker success.
     feedback = root / "feedback.md"

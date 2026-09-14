@@ -6,6 +6,7 @@ from contextlib import contextmanager
 import fcntl
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -18,6 +19,8 @@ import time
 import uuid
 
 from acp_stdio import ACP
+from task_spec import load as load_spec
+from verification import check as run_check
 
 
 ACTIVE = {"starting", "running", "stopping"}
@@ -25,6 +28,10 @@ DEFAULT_MAX_TURNS = 200
 NON_SUCCESS_TERMINAL = {"failed", "timed_out", "cancelled", "interrupted"}
 REPORT_LIMIT = 6000
 REPORT_OPEN, REPORT_CLOSE = "<freetoken-report>", "</freetoken-report>"
+
+
+def valid_budget(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) and 0 < value < 86400
 
 
 def save(path, value):
@@ -80,10 +87,24 @@ def snapshot(cwd):
             files[name] = {"submodule": git(path, "rev-parse", "HEAD").strip()}
     return {"head": git(cwd, "rev-parse", "HEAD").strip(), "files": files}
 
+def snapshot_digest(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
 
 def changed(before, after):
     a, b = before["files"], after["files"]
     return sorted(name for name in a.keys() | b.keys() if a.get(name) != b.get(name))
+
+def delta(before, after):
+    """Classify this attempt without pretending hashes can reconstruct content."""
+    result = []
+    for name in sorted(before["files"].keys() | after["files"].keys()):
+        old, new = before["files"].get(name), after["files"].get(name)
+        if old == new:
+            continue
+        kind = "added" if name not in before["files"] else "deleted" if name not in after["files"] else "modified"
+        result.append({"path": name, "kind": kind, "before": old, "after": new})
+    return result
 
 
 def in_scope(name, allowed):
@@ -137,6 +158,58 @@ def summary(state, folder):
         path = attempt / filename if attempt else None
         result[key] = short(path) if path and path.is_file() else None
     return result
+
+
+def evidence_checks(state):
+    """Point-in-time machine checks, never semantic acceptance or a sandbox."""
+    if state["status"] in ACTIVE or not state.get("attempt_dir"):
+        raise RuntimeError("Wait for a terminal attempt before checking evidence")
+    attempt = Path(state["attempt_dir"])
+    before, after = read(attempt / "before.json"), read(attempt / "after.json")
+    names = changed(before, after)
+    outside = [name for name in names if not in_scope(name, state["allow"])]
+    if before["head"] != after["head"]:
+        outside.append("<Git HEAD changed>")
+    identities = [state.get("controller"), state.get("worker"), *state.get("known_processes", [])]
+    table = processes()
+    return {
+        "recorded_before_immutable": not state.get("before_snapshot_sha256") or snapshot_digest(before) == state["before_snapshot_sha256"],
+        "recorded_after_immutable": not state.get("after_snapshot_sha256") or snapshot_digest(after) == state["after_snapshot_sha256"],
+        "workspace_matches_after": snapshot(Path(state["cwd"])) == after,
+        "head_unchanged": before["head"] == after["head"],
+        "within_scope": not outside,
+        "recorded_changes_match": names == state["changes"] and outside == state["out_of_scope"],
+        "observed_processes_stopped": not any(is_alive(item, table) for item in identities),
+    }
+
+def write_verification_receipt(state, checks):
+    """Persist mechanical evidence without upgrading semantic acceptance."""
+    attempt = Path(state["attempt_dir"])
+    approved = []
+    if state.get("spec_path"):
+        spec, actual_hash = load_spec(state["spec_path"])
+        if actual_hash != state.get("spec_sha256"):
+            raise RuntimeError("TaskSpec changed or lacks its recorded hash; refusing unverified acceptance commands")
+        timeout = float(spec["limits"].get("check_seconds", 60))
+        for command in spec["acceptance"]["commands"]:
+            if not isinstance(command, list) or not command or any(not isinstance(x, str) for x in command):
+                approved.append({"argv": command, "cwd": state["cwd"], "exit_code": None,
+                                 "timed_out": False, "error": "invalid explicit argv"})
+            else:
+                approved.append(run_check(command, state["cwd"], timeout))
+    if approved:
+        # Checks can write files too; a pre-check snapshot cannot certify their result.
+        checks.update(evidence_checks(state))
+    receipt = {"schema_version": 1, "task_id": state.get("task_id", attempt.parent.parent.name),
+               "attempt_id": state.get("attempt", attempt.name), "baseline": read(attempt / "before.json"),
+               "spec_sha256": state.get("spec_sha256"),
+               "after": read(attempt / "after.json"), "delta": delta(read(attempt / "before.json"), read(attempt / "after.json")),
+               "checks": checks, "approved_commands": approved,
+               "scope_ok": bool(checks.get("within_scope")),
+               "verification_status": "awaiting_review" if all(checks.values()) and all(x.get("exit_code") == 0 and not x.get("timed_out") for x in approved) else "failed",
+               "remaining_risks": ["semantic acceptance remains caller-owned"]}
+    save(attempt / "verification.json", receipt)
+    return receipt
 
 
 def final_report(messages):
@@ -204,6 +277,7 @@ class Run:
         (self.attempt / "before.diff").write_text(git(
             self.cwd, "diff", "--no-ext-diff", "--no-textconv", "--binary", "HEAD"))
         state.update(status="starting", controller=processes()[os.getpid()], worker=None,
+                     before_snapshot_sha256=snapshot_digest(self.before),
                      started_at=time.time(), budget_seconds=budget, last_event=None,
                      attempt_dir=str(self.attempt), error=None, known_processes=[],
                      elapsed_s=None, ended_at=None, worker_exit=None,
@@ -297,8 +371,10 @@ def codebuddy(run):
     argv += ["--session-id" if state["attempt"] == 1 else "--resume", state["session_id"], "--"]
     save(run.attempt / "argv.json", argv)
     with (run.attempt / "raw/stderr.log").open("wb") as err, (run.attempt / "raw/stdout.log").open("wb") as raw:
+        worker_env = os.environ.copy()
+        worker_env.setdefault("PYTHONDONTWRITEBYTECODE", "1")
         p = subprocess.Popen(argv + [run.prompt], cwd=run.cwd, stdout=subprocess.PIPE,
-                             stderr=err, start_new_session=True)
+                             stderr=err, start_new_session=True, env=worker_env)
         run.attach(p)
         selector = selectors.DefaultSelector()
         selector.register(p.stdout, selectors.EVENT_READ)
@@ -494,6 +570,9 @@ def dispatch(args):
                  "allow": args.allow, "session_id": str(uuid.uuid4()) if args.backend == "codebuddy" else None,
                  "session_confirmed": False, "attempt": 0, "status": "new", "permission_mode": "full",
                  "one_shot": args.one_shot, "max_attempts": args.max_attempts or 3}
+        if getattr(args, "spec_hash", None):
+            state.update(spec_path=str(Path(args.spec).resolve()), spec_sha256=args.spec_hash,
+                         spec_schema_version=1)
         save(folder / "state.json", state)
     with exclusive(folder / "task.lock"):
         state = read(folder / "state.json")
@@ -501,6 +580,8 @@ def dispatch(args):
             raise ValueError("--max-turns is only valid for the codebuddy backend")
         if state["status"] in ACTIVE | {"needs_attention", "scope_violation"}:
             raise RuntimeError("Unsettled attempt; inspect status and recover before resuming")
+        if args.command == "resume" and state["status"] == "accepted":
+            raise RuntimeError("Accepted task is closed; create a new task for additional work")
         if state.get("session_closed") or (args.command == "resume" and state.get("one_shot")):
             raise RuntimeError("Session is closed or one-shot; create a new task instead")
         if args.command == "resume" and not state.get("session_confirmed"):
@@ -514,7 +595,9 @@ def dispatch(args):
             previous = lease.read()
             if previous and json.loads(previous).get("active"):
                 raise RuntimeError("Workspace has an unsettled prior owner; inspect and recover that task")
-            if args.prompt_file:
+            if getattr(args, "prompt_text", None) is not None:
+                prompt = args.prompt_text
+            elif args.prompt_file:
                 prompt = Path(args.prompt_file).read_text()
             elif state["status"] == "needs_work":
                 attempt = Path(state["attempt_dir"])
@@ -566,7 +649,7 @@ def dispatch(args):
             outside = [name for name in changes if not in_scope(name, state["allow"])]
             if after["head"] != run.before["head"]:
                 outside.append("<Git HEAD changed>")
-            state.update(status=status, elapsed_s=round(time.monotonic() - run.start, 3),
+            state.update(status=status, after_snapshot_sha256=snapshot_digest(after), elapsed_s=round(time.monotonic() - run.start, 3),
                          changes=changes, out_of_scope=outside, cleanup_required=survivors,
                          ended_at=time.time())
             if outside:
@@ -598,7 +681,20 @@ def inspect_task(args):
                 "controller_alive", "worker_alive", "changes", "out_of_scope", "error",
                 "one_shot", "max_attempts", "session_closed", "cleanup")
         data = summary(state, folder) if args.summary else {key: state[key] for key in keys if key in state}
+        if getattr(args, "verify", False):
+            # Raw snapshots stay local; true checks do not accept failed or incorrect work.
+            data["evidence_checks"] = evidence_checks(state)
+            data["verification_receipt"] = str(Path(state["attempt_dir"]) / "verification.json")
+            receipt = write_verification_receipt(state, data["evidence_checks"])
+            failures = [{"index": i, "exit_code": check.get("exit_code"), "timed_out": check.get("timed_out", False)}
+                        for i, check in enumerate(receipt["approved_commands"])
+                        if check.get("exit_code") != 0 or check.get("timed_out")]
+            data["verification_status"] = receipt["verification_status"]
+            data["acceptance_checks"] = {"count": len(receipt["approved_commands"]),
+                                         "failed_count": len(failures), "failed_sample": failures[:5]}
         print(json.dumps(data, ensure_ascii=False, indent=None if args.summary else 2))
+        if getattr(args, "verify", False) and data["verification_status"] == "failed":
+            return 2
     elif args.command == "cancel":
         if state["status"] not in ACTIVE or not is_alive(state.get("controller")):
             raise RuntimeError("No confirmed live controller; inspect status instead of guessing a PID")
@@ -666,8 +762,20 @@ def inspect_task(args):
                 after_path = Path(state["attempt_dir"]) / "after.json"
                 if not after_path.is_file():
                     raise RuntimeError("Missing after snapshot; recover or provide an explicit diagnostic before review")
-                if snapshot(Path(state["cwd"])) != read(after_path):
+                recorded_after = read(after_path)
+                if state.get("after_snapshot_sha256") and snapshot_digest(recorded_after) != state["after_snapshot_sha256"]:
+                    raise RuntimeError("Recorded after snapshot was modified; review evidence is invalid")
+                if snapshot(Path(state["cwd"])) != recorded_after:
                     raise RuntimeError("Workspace changed since worker finished; review evidence is stale")
+                if args.decision == "accepted" and state.get("spec_path"):
+                    verification_path = Path(state["attempt_dir"]) / "verification.json"
+                    if not verification_path.is_file():
+                        raise RuntimeError("TaskSpec acceptance requires current verification; run status --verify first")
+                    verification = read(verification_path)
+                    if verification.get("spec_sha256") != state.get("spec_sha256"):
+                        raise RuntimeError("Verification does not match the recorded TaskSpec")
+                    if verification.get("verification_status") != "awaiting_review":
+                        raise RuntimeError("TaskSpec verification did not pass")
                 state["status"] = args.decision
             (Path(state["attempt_dir"]) / f"{args.command}.md").write_text(note)
             save(folder / "state.json", state)
@@ -684,7 +792,7 @@ def main():
         p.add_argument("--task-dir", required=True)
         if name in ("start", "resume", "revise"):
             if name != "revise":
-                p.add_argument("--prompt-file", required=name == "start")
+                p.add_argument("--prompt-file")
             p.add_argument("--budget", type=float, default=300)
             p.add_argument("--output", choices=("summary", "events"), default="summary")
             p.add_argument("--max-attempts", type=int, help="Total task attempts; default 3, explicit extension allowed")
@@ -696,22 +804,41 @@ def main():
             p.add_argument("--model", help="CodeBuddy model ID; dsh uses its opaque ACP option value")
             p.add_argument("--allow", action="append", default=[], help="Allowed relative file or directory ending /; scope check, not sandbox")
             p.add_argument("--one-shot", action="store_true", help="One submission, still reviewed, never resumable")
+            p.add_argument("--spec", help="Explicit JSON TaskSpec; compiles goal, scope and limits")
         if name in ("review", "recover", "revise"):
             p.add_argument("--evidence-file", required=True)
         if name == "cleanup":
             p.add_argument("--purge-raw", action="store_true", help="Delete this task's raw logs; keep reports and reviews")
         if name == "status":
             p.add_argument("--summary", action="store_true", help="Bounded caller summary; full state remains local")
+            p.add_argument("--verify", action="store_true", help="Check terminal snapshots, scope and observed processes; not acceptance")
         if name == "review":
             p.add_argument("--decision", choices=("accepted", "needs_work", "blocked"), required=True)
     args = parser.parse_args()
-    if hasattr(args, "budget") and not (0 < args.budget < 86400):
+    if args.command == "start" and not args.prompt_file and not args.spec:
+        parser.error("start requires --prompt-file or --spec")
+    if hasattr(args, "budget") and not valid_budget(args.budget):
         parser.error("--budget must be positive and less than one day")
     if getattr(args, "max_attempts", None) is not None and args.max_attempts < 1:
         parser.error("--max-attempts must be positive")
     if getattr(args, "max_turns", None) is not None and args.max_turns < 1:
         parser.error("--max-turns must be positive")
     try:
+        if args.command == "start" and args.spec:
+            spec, spec_hash = load_spec(args.spec)
+            args.spec_hash = spec_hash
+            args.allow = spec["scope"].get("write", [])
+            args.budget = float(spec["limits"].get("wall_seconds", args.budget))
+            if not valid_budget(args.budget):
+                raise ValueError("TaskSpec wall budget must be finite, positive and less than one day")
+            context = ""
+            if spec.get("context_files"):
+                base = Path(spec.get("workspace") or args.cwd)
+                context = "\n\nAuthoritative context:\n" + "\n\n".join(
+                    f"--- {p} ---\n{(base / p).read_text()}" for p in spec["context_files"])
+            spec_prompt = (spec["goal"] + context + "\n\nApproved checks:\n" +
+                           "\n".join("- " + " ".join(map(str, c)) if isinstance(c, list) else "- " + str(c) for c in spec["acceptance"]["commands"]))
+            args.prompt_text = spec_prompt + "\n\nTaskSpec-SHA256: " + spec_hash + "\n"
         if args.command == "revise":
             if getattr(args, "max_turns", None) is not None:
                 backend = read(Path(args.task_dir).expanduser().resolve() / "state.json").get("backend")
