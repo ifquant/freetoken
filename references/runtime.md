@@ -16,6 +16,8 @@ Use `--backend dsh` for ACP; `--model` is its exact JSON-pair option value, not 
 
 Default `--output summary` hides per-tool events but retains them locally. Use `--output events` for relevant diagnostics. Wait on the running-process handle. Terminal summary exposes evidence locations, not acceptance. dsh gets an explicit bounded final-report contract; malformed/missing framing stays marked unstructured/invalid and raw text remains local. Legacy tasks may lack report metadata.
 
+Worker final responses should be cheap to review: routine completion targets at most 1200 UTF-8 bytes; a real caller decision/blocker targets at most 1400. Decision handbacks use five compact fields only: question, minimal evidence, options, recommendation, and changes/checks. Keep search details and command transcripts in local logs. These are prompt targets rather than acceptance gates; the dsh framing parser keeps its 6000-byte hard safety ceiling so a slightly verbose but otherwise useful result is not discarded. `status --summary` exposes at most a 1400-byte UTF-8-safe head+tail `report_excerpt`; the complete report stays at the returned `report` path.
+
 After the attempt ends, use `status --task-dir <state-dir> --summary --verify`. It compares before/after scope and HEAD, recorded change lists, the current workspace against the after snapshot, and observed process identities. False checks or missing evidence return 2; raw records remain local. This is a point-in-time check over recorded, non-ignored files and observed processes, not a sandbox, writer lease or semantic acceptance. A failed worker can pass these mechanical checks and must still remain failed.
 
 For TaskSpec tasks, the same call executes the registered acceptance commands after checking the spec hash, then rechecks workspace evidence. The bounded response includes `verification_status` and `acceptance_checks` (count, failed_count, up to five failure exit codes). A failed command or a check-induced workspace change returns 2. Do not rerun unchanged checks just to retrieve results: use this response and the retained receipt. These commands are not guaranteed read-only; semantic review remains separate and `independent_verification` stays null.
@@ -30,6 +32,8 @@ python3 <skill-dir>/scripts/freetoken.py revise --task-dir <state-dir> \
 ```
 
 `revise` records `needs_work` then continues the exact session. If already `needs_work`, bare `resume --task-dir ...` reuses saved evidence. Changed workspace requires updated explicit `--prompt-file`; never reuse stale feedback. Reuse sessions for related work, new tasks for unrelated work; reuse does not guarantee cache retention.
+
+Before dispatch, use current evidence about the selected worker on the same kind of task. One clean result supports reuse; repeated non-progress, repeated semantic misses, or a first correction that still leaves caller-heavy work are evidence to take over. Do not build retries around the configured attempt ceiling and do not treat backend availability as evidence of fit.
 
 For caller takeover, record `needs_work` before editing, confirm stopped processes, and check caller changes separately; never credit them as accepted worker output. Non-success review requires stopped processes and a matching after snapshot; see recovery.
 

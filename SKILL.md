@@ -14,6 +14,7 @@ Codex owns objectives, boundaries, important decisions, independent acceptance, 
 - **Delegate:** a coherent execution package has settled boundaries, feasible independent checks, and enough useful work to repay handoff and likely fixes. Complex work is eligible; do not reserve an arbitrary hard fraction or split every function into a call.
 
 Compare total caller effort and elapsed time, not dispatch count. Money requires attributable evidence. No fixed size thresholds, routing scores, presumed success percentages, or savings claims. If little remains after investigation, stay direct.
+Use demonstrated worker fit as part of this choice. Prefer recent evidence on the same repository/task class over generic benchmarks. If a backend repeatedly stalls, needs caller judgment to make progress, or turns a bounded task into repeated review cycles, stop delegating that class of work and finish directly until new evidence justifies retrying it.
 
 ## Normal workflow
 

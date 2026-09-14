@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 
-from freetoken import final_report, processes, snapshot, summary
+from freetoken import final_report, processes, report_excerpt, snapshot, summary
 from task_spec import load as load_spec
 
 
@@ -27,6 +27,22 @@ compact = summary(state, "/task")
 assert len(json.dumps(compact)) < 5000
 assert compact["changes_count"] == 10000 and len(compact["changes_sample"]) == 5
 assert compact["independent_verification"] is None
+assert compact["report_bytes"] is None
+assert compact["report_excerpt"] is None
+
+with tempfile.TemporaryDirectory(prefix="freetoken-excerpt-") as directory:
+    report = Path(directory) / "report.md"
+    report.write_text("short report")
+    assert report_excerpt(report) == "short report"
+    for text, head, tail in (("HEAD-" + "x" * 3000 + "-TAIL", "HEAD-", "-TAIL"),
+                             ("开头" + "中" * 1000 + "结尾", "开头", "结尾")):
+        report.write_text(text)
+        excerpt = report_excerpt(report)
+        assert len(excerpt.encode("utf-8")) <= 1400
+        assert "...[report truncated]..." in excerpt
+        assert excerpt.startswith(head) and excerpt.endswith(tail)
+        compact = summary({"attempt_dir": str(report.parent)}, "/task")
+        assert compact["report_excerpt"] == excerpt and len(json.dumps(compact)) < 5000
 
 RUNNER = Path(__file__).with_name("freetoken.py")
 with tempfile.TemporaryDirectory(prefix="freetoken-output-") as directory:
@@ -53,7 +69,8 @@ for line in sys.stdin:
         result = {'sessionId':'offline','configOptions':[{'id':'model','currentValue':'fake'}]}
     elif method == 'session/prompt':
         prompt = request['params']['prompt'][0]['text']
-        assert '<freetoken-report>' in prompt and '6000' in prompt
+        assert '<freetoken-report>' in prompt and '6000' in prompt and '1200' in prompt and '1400' in prompt
+        assert 'QUESTION, EVIDENCE, OPTIONS, RECOMMENDATION, CHANGES/CHECKS' in prompt
         mode = prompt.splitlines()[0]
         text('private progress, not the final delivery\\n', 'progress')
         for i in range(100):
@@ -103,8 +120,12 @@ for line in sys.stdin:
         assert len((attempt / "events.jsonl").read_text().splitlines()) >= 100
         if status == "framed":
             assert (attempt / "report.md").read_text() == "done"
+            assert result["report_bytes"] == 4
+            assert result["report_excerpt"] == "done"
         else:
             assert not (attempt / "report.md").exists() and result["report"] is None
+            assert result["report_bytes"] is None
+            assert result["report_excerpt"] is None
         compact = cli("status", "--task-dir", task, "--summary")
         assert len(compact.splitlines()) == 1 and json.loads(compact)["report_status"] == status
     task = root / "valid"

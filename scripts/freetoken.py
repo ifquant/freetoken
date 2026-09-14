@@ -27,7 +27,10 @@ ACTIVE = {"starting", "running", "stopping"}
 DEFAULT_MAX_TURNS = 200
 NON_SUCCESS_TERMINAL = {"failed", "timed_out", "cancelled", "interrupted"}
 REPORT_LIMIT = 6000
+REPORT_ROUTINE_TARGET = 1200
+REPORT_DECISION_TARGET = 1400
 REPORT_OPEN, REPORT_CLOSE = "<freetoken-report>", "</freetoken-report>"
+REPORT_TRUNCATED = "\n...[report truncated]...\n"
 
 
 def valid_budget(value):
@@ -133,6 +136,20 @@ def result_detail(result, limit=400):
     return "; ".join(parts)
 
 
+def report_excerpt(path, limit=REPORT_DECISION_TARGET):
+    """Return a deterministic UTF-8-safe head+tail excerpt."""
+    text = Path(path).read_text(errors="replace")
+    data = text.encode("utf-8")
+    if len(data) <= limit:
+        return text
+    marker = REPORT_TRUNCATED.encode("utf-8")
+    room = max(0, limit - len(marker))
+    head = room // 2
+    tail = room - head
+    return (data[:head].decode("utf-8", errors="ignore") + REPORT_TRUNCATED +
+            data[-tail:].decode("utf-8", errors="ignore"))
+
+
 def summary(state, folder):
     """Bounded caller exposure; details and exact long paths remain in state.json."""
     def short(value, limit=240):
@@ -157,6 +174,9 @@ def summary(state, folder):
     for key, filename in (("report", "report.md"), ("usage", "usage.json")):
         path = attempt / filename if attempt else None
         result[key] = short(path) if path and path.is_file() else None
+    report = attempt / "report.md" if attempt else None
+    result["report_bytes"] = report.stat().st_size if report and report.is_file() else None
+    result["report_excerpt"] = report_excerpt(report) if report and report.is_file() else None
     return result
 
 
@@ -624,7 +644,11 @@ def dispatch(args):
                        "If a decision or approval is needed, stop the affected work and return the question, "
                        "evidence, options with consequences, and your recommendation; do not assume approval "
                        "or expand scope. Finish the response so the caller can decide. "
-                       "Report blockers rather than retrying indefinitely.")
+                       "Report blockers rather than retrying indefinitely. "
+                       f"Keep routine final delivery near {REPORT_ROUTINE_TARGET} UTF-8 bytes or less; if a real "
+                       f"caller decision is required, target {REPORT_DECISION_TARGET} bytes or less and use only "
+                       "five compact fields: QUESTION, EVIDENCE, OPTIONS, RECOMMENDATION, CHANGES/CHECKS. Skip "
+                       "search details, command transcripts and repeated repository facts; keep them in local logs.")
             if state["backend"] == "dsh":
                 prompt += (f"\nEnd with exactly one {REPORT_OPEN} final delivery {REPORT_CLOSE} block, "
                            f"at most {REPORT_LIMIT} UTF-8 bytes inside it, in one assistant message. "
