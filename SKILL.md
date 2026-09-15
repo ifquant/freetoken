@@ -1,37 +1,28 @@
 ---
 name: freetoken
-description: Delegate substantial, clearly bounded work packages to local CodeBuddy or dsh when execution outweighs handoff and review. Codex retains decisions, independent acceptance, and closure. Keep trivial work direct; supports corrections, decision handbacks, and cleanup.
+description: Delegate bounded work to local CodeBuddy or dsh, then review, correct, or resume it. Use when useful execution outweighs caller handoff and verification.
 ---
 
 # freetoken
 
-Codex owns objectives, boundaries, important decisions, independent acceptance, and final correctness. The worker supplies execution and evidence, never acceptance. Respect the user's backend/model choice and authorization. This setup uses full backend permissions; `--allow` is a post-execution scope check, **not a sandbox**.
+The caller owns scope, decisions, independent acceptance and closure. This skill guides the caller, primarily Astra; external workers receive a task brief and the runner's execution contract. Respect the user's chosen backend/model and existing authorization. Full backend permissions do not expand task scope; `--allow` detects scope violations after execution and is not a sandbox.
 
-## Choose the route before preparing a task
+## Choose the work
 
-- **Direct:** remaining work is cheaper to do and verify than to specify, dispatch, review, repair and integrate; or decisions/context cannot be separated reliably.
-- **Clarify:** important behavior, boundaries or acceptance is unresolved. Resolve ordinary questions locally; ask only for missing user choices. Substantial bounded read-only investigation may be delegated.
-- **Delegate:** a coherent execution package has settled boundaries, feasible independent checks, and enough useful work to repay handoff and likely fixes. Complex work is eligible; do not reserve an arbitrary hard fraction or split every function into a call.
+Delegate a substantial stage with an independently observable outcome, clear boundaries and feasible acceptance. Define dependencies and handback artifacts rather than splitting by function. Work directly when investigation, handoff, review and repair would cost more than completing the remainder, or when decisions cannot be separated reliably. Use demonstrated worker fit, and reassess when the remaining work changes.
 
-Compare total caller effort and elapsed time, not dispatch count. Money requires attributable evidence. No fixed size thresholds, routing scores, presumed success percentages, or savings claims. If little remains after investigation, stay direct.
-Use demonstrated worker fit as part of this choice. Prefer recent evidence on the same repository/task class over generic benchmarks. If a backend repeatedly stalls, needs caller judgment to make progress, or turns a bounded task into repeated review cycles, stop delegating that class of work and finish directly until new evidence justifies retrying it.
+Resolve routine gaps from authoritative documents, code and tests. Ask only when missing or conflicting evidence leaves a choice that could materially change behavior, scope or acceptance. A missing template heading alone is not a blocker. User instructions govern the task; this skill adds no approval steps for already-authorized work.
 
-## Normal workflow
+## Complete the stage
 
-1. Specify the full bounded slice: objective, entry points, allowed edits, invariants and integrated checks. Reference accessible authoritative requirements instead of retyping them; add missing constraints and resolve conflicts. Understand enough to set the boundary, leaving detailed investigation, implementation and self-tests to the worker. Complex packages get an ordered plan and real decision-return conditions, not approval after routine substeps. Request concise changes, check results, risks and evidence paths, not a source/diff transcript.
-   When a validated TaskSpec is available, pass it directly with `--spec`; do not create a duplicate `worker.md` or restate the contract.
-2. Confirm writer ownership, including writers outside this runner. Use an explicit Git root and external task-state directory; concurrent writers need separate worktrees and integration checks. New worktrees omit uncommitted work unless explicitly carried over.
-   The runner creates the task-state directory; do not pre-create it or reuse a non-empty directory.
-3. Read [runtime](references/runtime.md) before dispatch or continuation. Run `scripts/freetoken.py` relative to this skill; Python 3.10+ and a configured backend are required. Default output is bounded summary; events stay local. Wait on the existing process handle; polling timeout does not authorize resubmission. Use `status --summary`, not a model prompt, for progress.
-4. Inspect the concise report and actual changes once; independently run checks. Use `status --summary --verify` for mechanical evidence, expanding raw logs only on failure or ambiguity. Avoid duplicate source/diff reads, but do not omit semantic review merely because tests pass. HEAD-relative diffs include pre-existing changes; inspect untracked contents as needed. Machine checks and `awaiting_review` are not semantic acceptance. Missing/invalid dsh framing requires local stream inspection; never relay raw reasoning.
-5. Record `accepted` only for independently verified worker results, with concise verdict, check outcomes, evidence paths and unresolved risks. Normally batch defects into one worker correction; if that correction still cannot close the task, or the remaining work needs caller judgment/context, record `needs_work`, confirm stopped writer, and finish locally. Do not credit caller-fixed work as worker-only success. Continue until complete or genuinely blocked.
+1. Prepare the [dispatch brief](references/dispatch-brief.md), or pass an existing TaskSpec with `--spec`. Define outcome, scope/exclusions, relevant invariants, required environment/access/data, checks, expected results and evidence. Include initial state and first real use where they affect correctness. Link authoritative requirements instead of duplicating them.
+2. Confirm writer ownership and preserve dirty work. Use an explicit Git root and fresh external task-state directory created by the runner. Concurrent writers need isolated worktrees; carry required uncommitted inputs explicitly. Use [runtime](references/runtime.md) for command and backend details when needed. Budget for the whole stage and its checks; CodeBuddy defaults to 200 turns.
+3. Wait on the existing process handle; observation timeouts do not authorize another submission. Inspect `status --summary` for progress.
+4. Review actual changes and independently verify acceptance. Caller-triggered checks, including TaskSpec `status --verify`, need not be repeated if their evidence is current. Worker self-tests, hashes and `awaiting_review` alone are insufficient. Required target execution cannot be replaced by a skip or substitute environment.
+5. Record `accepted` only for independently verified worker output. Otherwise batch defects, resolve caller decisions and continue under [correction and recovery](references/recovery.md). A worker return is a handback to the caller, not completion of the user's task. Finish through correction, integration and verification, or report the concrete remaining blocker. Preserve attribution when the caller completes partial worker work.
 
-Stop ineffective correction loops early. The default three attempts is only a hard ceiling; a second correction should be exceptional and justified by clear remaining execution value. Failures may contain useful work: preserve evidence and inspect partial changes before takeover. Do not rewrite sound work simply to change ownership.
+## Continuation boundaries
 
-## Conditional procedures
+The first failure may receive a normal retry. After two failed attempts, allow another retry only if the caller verifies that the latest failed attempt resolved at least 80% of its preceding issue set. Each such progress retry needs fresh evidence, and this exception stops at four total task attempts, including the initial attempt and decision handbacks. Otherwise take over after confirming stopped writers. Decision-only handbacks and unreviewed normal returns do not reset failures. Never evade these limits with replacement tasks or worker switches. The evidence format and failure categories live in [recovery](references/recovery.md).
 
-- Commands, retained budgets, one-shot and review/resume: [runtime](references/runtime.md).
-- Blockers, cancellation, unknown writer state, scope violations, failed attempts or requested cleanup: read [recovery](references/recovery.md) **before acting**. Never retry around an unresolved writer or silently revert user changes.
-- Usage, calibration or efficiency claims: read [measurement](references/measurement.md). Worker usage is not caller Codex usage; unknown counters remain unavailable.
-
-Worker questions must end the attempt with evidence/options/recommendation; permissions and silence do not authorize new scope or design. `blocked` requires an explicit decision file to resume. Explicitly one-time tasks use `--one-shot`; never open another task to evade no-resume. Only clean logs when requested, after stopping writers; retain review/failure evidence. Keep unrelated project details outside this repository.
+Read recovery for clarification handbacks, failed/interrupted attempts, uncertain writers, scope violations, one-shot tasks or requested cleanup. Preserve failure evidence and user edits. Read [measurement](references/measurement.md) only for usage or efficiency claims; worker usage is not caller usage, and shorter prompts do not prove savings.

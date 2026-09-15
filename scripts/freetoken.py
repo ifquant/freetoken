@@ -25,6 +25,8 @@ from verification import check as run_check
 
 ACTIVE = {"starting", "running", "stopping"}
 DEFAULT_MAX_TURNS = 200
+DEFAULT_EFFORT = "high"
+EFFORT_CHOICES = ("high", "max")
 NON_SUCCESS_TERMINAL = {"failed", "timed_out", "cancelled", "interrupted"}
 REPORT_LIMIT = 6000
 REPORT_ROUTINE_TARGET = 1200
@@ -105,7 +107,8 @@ def delta(before, after):
         old, new = before["files"].get(name), after["files"].get(name)
         if old == new:
             continue
-        kind = "added" if name not in before["files"] else "deleted" if name not in after["files"] else "modified"
+        # A missing tracked file retains its key with a null snapshot value.
+        kind = "added" if old is None else "deleted" if new is None else "modified"
         result.append({"path": name, "kind": kind, "before": old, "after": new})
     return result
 
@@ -122,6 +125,55 @@ def resolved_max_turns(state, requested):
     return state.get("max_turns", DEFAULT_MAX_TURNS)
 
 
+def resolved_effort(state, requested):
+    """Explicit override wins; otherwise retain the persisted value, defaulting to high."""
+    if requested is not None:
+        return requested
+    return state.get("effort", DEFAULT_EFFORT)
+
+
+def requires_takeover(folder, state):
+    """Read failure evidence without rewriting outcomes or counting review twice."""
+    failures = 0
+    for number in range(state["attempt"], 0, -1):
+        attempt = folder / "attempts" / f"{number:04d}"
+        outcome = attempt / "outcome.json"
+        review = attempt / "review.json"
+        recovery = attempt / "recover.json"
+        status = read(outcome).get("status") if outcome.is_file() else None
+        decision = read(review).get("decision") if review.is_file() else None
+        recovered = read(recovery).get("status") if recovery.is_file() else None
+        current = state["status"] if number == state["attempt"] else None
+        if decision == "accepted" or current == "accepted":
+            break
+        if (status in NON_SUCCESS_TERMINAL | {"scope_violation", "needs_attention"}
+                or decision == "needs_work"
+                or recovered in {"interrupted", "needs_work"}
+                or current in NON_SUCCESS_TERMINAL | {"needs_work"}):
+            failures += 1
+            if failures == 2:
+                return True
+        # A decision handback or unreviewed exit 0 does not establish progress
+        # and cannot erase failures. Legacy prose reviews stay caller-owned.
+    return False
+
+
+def progress_retry_evidence(path, state):
+    """Validate the caller's measured exception; semantic verification is theirs."""
+    evidence = read(Path(path))
+    if not isinstance(evidence, dict):
+        raise ValueError("Progress retry evidence must be a JSON object")
+    total, resolved = evidence.get("previous_issues"), evidence.get("resolved_issues")
+    if (type(evidence.get("attempt")) is not int or evidence["attempt"] != state["attempt"]
+            or type(total) is not int or type(resolved) is not int
+            or not 0 < total or not 0 <= resolved <= total or resolved * 10 < total * 8):
+        raise ValueError("Progress retry requires the current attempt and at least 80% of previous issues resolved")
+    for field in ("verification", "remaining_work"):
+        if not isinstance(evidence.get(field), str) or not evidence[field].strip():
+            raise ValueError(f"Progress retry requires caller {field} evidence")
+    return evidence
+
+
 def result_detail(result, limit=400):
     """Compact provider-failure diagnostics; no raw reasoning or synthesized report."""
     if not result:
@@ -136,9 +188,8 @@ def result_detail(result, limit=400):
     return "; ".join(parts)
 
 
-def report_excerpt(path, limit=REPORT_DECISION_TARGET):
-    """Return a deterministic UTF-8-safe head+tail excerpt."""
-    text = Path(path).read_text(errors="replace")
+def excerpt_text(text, limit=REPORT_DECISION_TARGET):
+    """Return a deterministic UTF-8-safe head+tail excerpt of report text."""
     data = text.encode("utf-8")
     if len(data) <= limit:
         return text
@@ -148,6 +199,27 @@ def report_excerpt(path, limit=REPORT_DECISION_TARGET):
     tail = room - head
     return (data[:head].decode("utf-8", errors="ignore") + REPORT_TRUNCATED +
             data[-tail:].decode("utf-8", errors="ignore"))
+
+
+def report_excerpt(path, limit=REPORT_DECISION_TARGET):
+    return excerpt_text(Path(path).read_text(errors="replace"), limit)
+
+
+def signals_text(text):
+    """Parse only explicit worker declarations; absence remains unknown."""
+    result = {}
+    for key in ("UNRUN_CHECKS", "DECISION_REQUIRED", "PENDING_WORK", "CLARIFICATION_REQUIRED"):
+        match = re.search(rf"(?im)^\s*{key}\s*:\s*(.+?)\s*$", text)
+        if not match:
+            result[key.lower()] = "unknown"
+        else:
+            value = match.group(1).strip().lower()
+            result[key.lower()] = "none_declared" if value in {"none", "no", "n/a"} else "present"
+    return result
+
+
+def report_signals(path):
+    return signals_text(Path(path).read_text(errors="replace"))
 
 
 def summary(state, folder):
@@ -160,7 +232,7 @@ def summary(state, folder):
 
     attempt = Path(state["attempt_dir"]) if state.get("attempt_dir") else None
     result = {key: short(state.get(key)) for key in
-              ("task_id", "status", "observed_status", "backend", "model", "session_id")}
+              ("task_id", "status", "observed_status", "backend", "model", "effort", "session_id")}
     result.update(task_dir=short(folder), attempt=state.get("attempt"),
                   attempt_dir=short(attempt), elapsed_s=state.get("elapsed_s"),
                   controller_alive=state.get("controller_alive"), worker_alive=state.get("worker_alive"),
@@ -175,8 +247,19 @@ def summary(state, folder):
         path = attempt / filename if attempt else None
         result[key] = short(path) if path and path.is_file() else None
     report = attempt / "report.md" if attempt else None
-    result["report_bytes"] = report.stat().st_size if report and report.is_file() else None
-    result["report_excerpt"] = report_excerpt(report) if report and report.is_file() else None
+    text = report.read_text(errors="replace") if report and report.is_file() else None
+    result["report_bytes"] = len(text.encode("utf-8")) if text is not None else None
+    result["report_excerpt"] = excerpt_text(text) if text is not None else None
+    result["report_truncated"] = bool(text is not None and len(text.encode("utf-8")) > REPORT_DECISION_TARGET)
+    result["report_requires_full_read"] = bool(
+        text is None or result["report_truncated"]
+        or result["report_status"] not in {"framed", "provider_final"})
+    result["report_signals"] = signals_text(text) if text is not None else {
+        "unrun_checks": "unknown", "decision_required": "unknown", "pending_work": "unknown",
+        "clarification_required": "unknown"}
+    result["spec"] = bool(state.get("spec_path"))
+    receipt = attempt / "verification.json" if attempt else None
+    result["verification_receipt"] = short(receipt) if receipt and receipt.is_file() else None
     return result
 
 
@@ -383,7 +466,8 @@ def codebuddy(run):
     state = run.state
     argv = [state["executable"], "--print", "--verbose", "--output-format", "stream-json",
             "--permission-mode", "bypassPermissions", "--max-turns",
-            str(state.get("max_turns", DEFAULT_MAX_TURNS))]
+            str(state.get("max_turns", DEFAULT_MAX_TURNS)), "--effort",
+            state.get("effort", DEFAULT_EFFORT)]
     if state.get("model"):
         argv += ["--model", state["model"]]
     if state.get("one_shot"):
@@ -528,6 +612,20 @@ def dsh(run):
             actual = next((x["currentValue"] for x in options if x["id"] == "model"), None)
             if state.get("model") and actual != state["model"]:
                 raise RuntimeError("Could not confirm requested dsh model")
+            effort_option = next((x for x in options
+                                  if x["id"] in {"reasoning_effort", "thought_level"}), None)
+            if not effort_option:
+                raise RuntimeError("dsh ACP does not expose a reasoning effort option")
+            effort = state.get("effort", DEFAULT_EFFORT)
+            if effort_option["currentValue"] != effort:
+                session = client.call("session/set_config_option", {
+                    "sessionId": state["session_id"], "configId": effort_option["id"], "value": effort,
+                }, tick=startup_tick)
+                options = session.get("configOptions", [])
+                effort_option = next((x for x in options if x["id"] == effort_option["id"]), effort_option)
+            if effort_option["currentValue"] != effort:
+                raise RuntimeError("Could not confirm requested dsh reasoning effort")
+            state["effort"] = effort
             state["model"] = actual
             save(run.attempt / "session.json", session)
             run.event("initialized", session_id=state["session_id"], model=actual)
@@ -587,9 +685,11 @@ def dispatch(args):
         folder.mkdir(parents=True, mode=0o700, exist_ok=False)
         state = {"task_id": folder.name, "cwd": str(cwd), "backend": args.backend,
                  "executable": str(Path(executable).resolve()), "model": args.model,
+                 "effort": args.effort or DEFAULT_EFFORT,
                  "allow": args.allow, "session_id": str(uuid.uuid4()) if args.backend == "codebuddy" else None,
                  "session_confirmed": False, "attempt": 0, "status": "new", "permission_mode": "full",
-                 "one_shot": args.one_shot, "max_attempts": args.max_attempts or 3}
+                 "one_shot": args.one_shot, "max_attempts": args.max_attempts or 3,
+                 "max_attempts_explicit": args.max_attempts is not None}
         if getattr(args, "spec_hash", None):
             state.update(spec_path=str(Path(args.spec).resolve()), spec_sha256=args.spec_hash,
                          spec_schema_version=1)
@@ -607,6 +707,20 @@ def dispatch(args):
         if args.command == "resume" and not state.get("session_confirmed"):
             raise RuntimeError("No confirmed session ID to resume; do not blindly re-submit")
         limit = args.max_attempts or state.get("max_attempts", 3)
+        # Legacy records cannot distinguish default 3 from an explicit cap;
+        # preserve their limit unless the caller explicitly raises it.
+        explicit_limit = args.max_attempts is not None or state.get("max_attempts_explicit", True)
+        progress = None
+        progress_path = getattr(args, "progress_retry_evidence", None)
+        if requires_takeover(folder, state):
+            if state["attempt"] >= 4 or not progress_path:
+                raise RuntimeError("Two failed attempts require caller takeover unless current caller evidence proves at least 80% of prior issues resolved; progress retries stop at four total attempts. --max-attempts alone cannot override this gate")
+            if state["status"] != "needs_work":
+                raise RuntimeError("Record a needs_work review before requesting a progress retry")
+            progress = progress_retry_evidence(progress_path, state)
+            limit = min(limit if explicit_limit else 4, 4)
+        elif progress_path:
+            raise ValueError("Progress retry evidence is only needed after two failed attempts")
         if state["attempt"] >= limit:
             raise RuntimeError("Attempt limit reached; reassess before explicitly raising --max-attempts")
         cwd = Path(state["cwd"])
@@ -615,6 +729,8 @@ def dispatch(args):
             previous = lease.read()
             if previous and json.loads(previous).get("active"):
                 raise RuntimeError("Workspace has an unsettled prior owner; inspect and recover that task")
+            if progress is not None and snapshot(cwd) != read(Path(state["attempt_dir"]) / "after.json"):
+                raise RuntimeError("Workspace changed since review; progress retry evidence is stale")
             if getattr(args, "prompt_text", None) is not None:
                 prompt = args.prompt_text
             elif args.prompt_file:
@@ -630,30 +746,41 @@ def dispatch(args):
                 raise ValueError("Empty prompt")
             if state["status"] == "blocked":
                 (Path(state["attempt_dir"]) / "decision.md").write_text(prompt)
+            if progress is not None:
+                save(Path(state["attempt_dir"]) / "progress-retry.json", progress)
             state["attempt"] += 1
             state["max_attempts"] = limit
+            state["max_attempts_explicit"] = explicit_limit
             if state["backend"] == "codebuddy":
                 state["max_turns"] = resolved_max_turns(state, getattr(args, "max_turns", None))
+            state["effort"] = resolved_effort(state, getattr(args, "effort", None))
             scope = ", ".join(state["allow"]) or "none (read-only task)"
             prompt += (f"\n\nWorker contract: work only in {cwd}. Preserve existing changes. "
                        f"Allowed changes: {scope}. Do not edit other files, Git metadata, or commit. "
                        "Use existing full permissions only for this task; do not send external messages or deploy. "
                        "Do not spawn additional agents unless the task explicitly requests them. "
-                       "Return actual changes, checks with exit results, and remaining blockers. "
-                       "The caller owns the objective, plan and final correctness. Follow its plan when provided. "
-                       "If a decision or approval is needed, stop the affected work and return the question, "
-                       "evidence, options with consequences, and your recommendation; do not assume approval "
-                       "or expand scope. Finish the response so the caller can decide. "
-                       "Report blockers rather than retrying indefinitely. "
-                       f"Keep routine final delivery near {REPORT_ROUTINE_TARGET} UTF-8 bytes or less; if a real "
-                       f"caller decision is required, target {REPORT_DECISION_TARGET} bytes or less and use only "
-                       "five compact fields: QUESTION, EVIDENCE, OPTIONS, RECOMMENDATION, CHANGES/CHECKS. Skip "
-                       "search details, command transcripts and repeated repository facts; keep them in local logs.")
+                       "The caller owns scope, decisions and acceptance. Resolve routine gaps from authoritative "
+                       "documents, code and tests; preserve explicit requirements. Make low-risk reversible "
+                       "implementation choices locally. A missing template heading alone is not a blocker. "
+                       "Continue authorized work through implementation and required checks. Use current check "
+                       "results; rerun affected checks after changes, failures or unresolved concerns. "
+                       "If evidence remains missing or contradictory and a choice would materially change behavior, "
+                       "scope, interfaces, acceptance or an irreversible result, stop the affected work and return "
+                       "the decision to the caller. Complete independent in-scope work when useful and safe, then "
+                       "end the attempt. Report unavailable required environments/checks instead of weakening acceptance. "
+                       "Delivery: summarize changes, check results with evidence paths, remaining work/risks and "
+                       "any implementation assumptions. For a caller decision, also provide QUESTION, EVIDENCE, "
+                       "OPTIONS, RECOMMENDATION and BLOCKED_SCOPE. Every final delivery must contain one line each: "
+                       "UNRUN_CHECKS: <none or list>; DECISION_REQUIRED: <none or question>; "
+                       "PENDING_WORK: <none or list>; CLARIFICATION_REQUIRED: <yes or no>. "
+                       f"Aim for {REPORT_ROUTINE_TARGET} UTF-8 bytes for routine delivery or "
+                       f"{REPORT_DECISION_TARGET} for a decision; these are soft targets, not reasons to omit "
+                       "essential evidence. Keep transcripts and longer details in local logs and link them.")
             if state["backend"] == "dsh":
-                prompt += (f"\nEnd with exactly one {REPORT_OPEN} final delivery {REPORT_CLOSE} block, "
-                           f"at most {REPORT_LIMIT} UTF-8 bytes inside it, in one assistant message. "
-                           "Include actual changes, checks/results, blockers and pending work. "
-                           "Do not use these delimiters in progress text or examples.")
+                prompt += (f"\nReturn exactly one final delivery in a single {REPORT_OPEN}...{REPORT_CLOSE} block "
+                           f"inside one assistant message, at most {REPORT_LIMIT} UTF-8 bytes. "
+                           "Put all delivery fields and declarations inside that block. Do not put any text "
+                           "after the closing delimiter, and do not use these delimiters in progress text.")
             run = Run(folder, state, prompt, args.budget, args.output)
             lock_record(lease, {"active": True, "task_dir": str(folder)})
             old_handlers = {s: signal.signal(s, lambda *_: run.request_stop("cancelled")) for s in (signal.SIGINT, signal.SIGTERM)}
@@ -670,6 +797,7 @@ def dispatch(args):
             save(run.attempt / "after.json", after)
             (run.attempt / "changes.diff").write_text(git(cwd, "diff", "--no-ext-diff", "--no-textconv", "--binary", "HEAD"))
             changes = changed(run.before, after)
+            save(run.attempt / "attempt-delta.json", delta(run.before, after))
             outside = [name for name in changes if not in_scope(name, state["allow"])]
             if after["head"] != run.before["head"]:
                 outside.append("<Git HEAD changed>")
@@ -700,7 +828,7 @@ def inspect_task(args):
         state["worker_alive"] = is_alive(state.get("worker"), table)
         if state["status"] in ACTIVE and not state["controller_alive"]:
             state["observed_status"] = "unconfirmed; inspect known processes before recover"
-        keys = ("task_id", "backend", "status", "observed_status", "model", "session_id",
+        keys = ("task_id", "backend", "status", "observed_status", "model", "effort", "session_id",
                 "attempt", "attempt_dir", "budget_seconds", "max_turns", "elapsed_s", "last_event",
                 "controller_alive", "worker_alive", "changes", "out_of_scope", "error",
                 "one_shot", "max_attempts", "session_closed", "cleanup")
@@ -802,6 +930,10 @@ def inspect_task(args):
                         raise RuntimeError("TaskSpec verification did not pass")
                 state["status"] = args.decision
             (Path(state["attempt_dir"]) / f"{args.command}.md").write_text(note)
+            if args.command == "review":
+                save(Path(state["attempt_dir"]) / "review.json", {"decision": args.decision})
+            elif args.command == "recover":
+                save(Path(state["attempt_dir"]) / "recover.json", {"status": state["status"]})
             save(folder / "state.json", state)
             if not getattr(args, "quiet", False):
                 print(state["status"])
@@ -821,6 +953,8 @@ def main():
             p.add_argument("--output", choices=("summary", "events"), default="summary")
             p.add_argument("--max-attempts", type=int, help="Total task attempts; default 3, explicit extension allowed")
             p.add_argument("--max-turns", type=int, help="CodeBuddy turn limit; default 200, retained when omitted, codebuddy only")
+            p.add_argument("--effort", choices=EFFORT_CHOICES,
+                           help="Reasoning effort; defaults to high and is retained on resume")
         if name == "start":
             p.add_argument("--cwd", required=True)
             p.add_argument("--backend", choices=("codebuddy", "dsh"), required=True)
@@ -831,6 +965,8 @@ def main():
             p.add_argument("--spec", help="Explicit JSON TaskSpec; compiles goal, scope and limits")
         if name in ("review", "recover", "revise"):
             p.add_argument("--evidence-file", required=True)
+        if name in ("resume", "revise"):
+            p.add_argument("--progress-retry-evidence", help="Caller JSON proving >=80%% of previous issues resolved; permits up to four total attempts")
         if name == "cleanup":
             p.add_argument("--purge-raw", action="store_true", help="Delete this task's raw logs; keep reports and reviews")
         if name == "status":

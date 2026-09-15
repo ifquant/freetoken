@@ -16,7 +16,7 @@ Simply ask Codex:
 
 Then invoke `$freetoken` in your project and describe the task. You still need a working dsh or CodeBuddy backend; installing the skill does not configure those services.
 
-For the installing agent: install root `SKILL.md`, `scripts/`, and the three operating references `references/runtime.md`, `references/recovery.md`, `references/measurement.md` under the user's Codex skills directory as `freetoken`. Other reference projects and experiments are not needed.
+For the installing agent: install root `SKILL.md`, `scripts/`, and the four operating references `references/dispatch-brief.md`, `references/runtime.md`, `references/recovery.md`, `references/measurement.md` under the user's Codex skills directory as `freetoken`. Other reference projects and experiments are not needed.
 
 ## Prerequisites
 
@@ -35,7 +35,7 @@ The current runner uses full backend permissions. Review the permission and scop
 
 ## Use in another project
 
-For manual installation, copy `SKILL.md`, `scripts/` and the three operating references listed above to `~/.codex/skills/freetoken/`, preserving their relative paths. For local development, `scripts/` can link to your checkout; synchronize the installed entry and operating references together. Check existing files before replacing them. Do not install reference projects as additional skills.
+For manual installation, copy `SKILL.md`, `scripts/` and the four operating references listed above to `~/.codex/skills/freetoken/`, preserving their relative paths. For local development, `scripts/` can link to your checkout; synchronize the installed entry and operating references together. Check existing files before replacing them. Do not install reference projects as additional skills.
 
 In a new Codex task, invoke `$freetoken` and specify the project, objective, backend, and allowed changes. For example:
 
@@ -52,6 +52,7 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py start \
   --task-dir ~/.local/state/freetoken/my-project/fix-log-01 \
   --cwd /absolute/path/to/project \
   --backend codebuddy --model deepseek-v4.1-flash \
+  --effort high \
   --prompt-file /absolute/path/to/task.md \
   --allow src/log.py --budget 300
 ```
@@ -59,6 +60,8 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py start \
 Repeat `--allow` for additional paths. Directory entries end in `/`; omitting the option declares a read-only task, and `.` allows the entire workspace. This is a post-execution scope check, not a permission sandbox. The runner uses full permissions: process-local `bypassPermissions` for CodeBuddy, and the local ACP profile with one-time permission requests accepted for dsh. It does not change global configuration.
 
 Use `--backend dsh` to select dsh. By default, it uses the current ACP model. To select a model explicitly, pass the complete ACP option value to `--model`, such as the locally tested `'["deepseek-official","deepseek-v4-flash"]'`. Use `--executable /absolute/path/to/cli` to pin an executable. The task records the resolved path and selected model.
+
+Reasoning effort is runner-owned and defaults to `high`. Use `--effort max` for quality-first work; the setting is persisted and reused by `resume`/`revise` unless overridden. dsh applies it through the ACP `reasoning_effort`/`thought_level` option, while CodeBuddy receives its native `--effort` flag.
 
 `start`, `resume`, and `revise` run in the foreground until the attempt ends. If the host tool returns a running-process handle, continue waiting on that handle. An observation timeout is not a failed dispatch; do not submit another `start`.
 
@@ -117,7 +120,7 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py cleanup \
   --task-dir <task-dir> --purge-raw
 ```
 
-Tasks default to three total attempts: the initial attempt plus two corrections. Failed and timed-out attempts also count. Reassess before extending the total explicitly with an option such as `--max-attempts 5`; do not retry indefinitely. Older tasks without a saved limit also default to three. The resume command does not determine whether code is correct; Codex remains responsible for review.
+Budget for one complete stage and its checks. CodeBuddy already defaults to 200 turns (`--max-turns`), retained on continuation; wall time is separate. Tasks default to three total attempts, including decision handbacks. Two consecutive failed attempts normally require caller takeover: execution errors, timeout/turn-limit exhaustion, cancellation/interruption, scope violations and rejected candidates (`needs_work`) count once per attempt. Decision-only handbacks and unreviewed normal returns do not reset failures. A [progress exception](references/recovery.md#progress-exception-at-least-80-resolved-at-most-four-total-attempts) permits up to four total attempts, including the initial attempt, if the caller independently verifies at least 80% of the prior issue set was resolved and remaining work is bounded. Each extra retry requires fresh `--progress-retry-evidence`; raising `--max-attempts` alone does not suffice. Preserve evidence and useful partial work. Legacy prose-only reviews remain the caller's responsibility. Do not open a replacement task or switch workers to evade takeover.
 
 A one-shot task permits one submission and no automatic corrections. CodeBuddy uses native `--no-session-persistence`; dsh may still retain backend history. Task results and review evidence remain available. “One-shot” does not mean “no records.”
 
@@ -129,7 +132,7 @@ See the [second usage review](experiments/runs/2026-09-11-usage-review-02/record
 
 The caller, usually Codex, first decides whether delegation is worthwhile. The task must fit the selected backend/model's demonstrated capability and be clear enough to specify and verify. Work directly when decisions are tightly coupled, the core design is unresolved, context is difficult to transfer, or dispatch and review would cost more than doing the work. For a complex task, delegate only a well-defined part when appropriate.
 
-Every assignment includes an objective, scope, constraints, and acceptance criteria. Complex assignments also include an ordered execution plan, checkpoints, and conditions requiring a decision from the caller. The worker contributes execution capacity and evidence; it does not replace the caller's responsibility for final correctness.
+Split substantial work into independently acceptable stages with observable outcomes, dependencies and handback artifacts. Before dispatch, freeze the [acceptance contract](references/dispatch-brief.md): outcome, scope/exclusions, invariants, initial state and first real use, required environment/access/data, exact checks with expected results, evidence and decision-return conditions. Required target execution cannot be replaced by skips, mocks or another environment. Complex assignments also include an ordered plan. The worker delivers a candidate and evidence; the caller independently decides acceptance.
 
 When approval or a decision is needed, the worker ends the current attempt and returns the question, supporting facts, options and consequences, recommendation, and completed/unfinished work. The caller resolves ordinary decisions within existing authorization and asks the user only when a user choice or additional authority is genuinely missing.
 
@@ -142,4 +145,4 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py resume \
 
 A `blocked` task cannot use bare `resume` or `revise`. The explicit decision is saved as `decision.md` in the original attempt. Worker questions are not automatically approved, and native tool permission approval does not authorize a new scope or design decision. Existing full-permission settings remain unchanged.
 
-If clear feedback repeatedly fails to produce progress, the caller should stop delegating early, confirm that the old worker has stopped, inspect partial changes, and complete and verify the work directly. Three attempts is a ceiling, not a quota to exhaust. Do not count a caller-fixed result as worker success. Assess capability using observed successes and failures, not worker self-assessment.
+Take over earlier when another handoff and review costs more than finishing directly. After two consecutive failures, require the verified progress exception for any further retry; take over after four total attempts regardless of that exception. Confirm stopped writers, preserve the original evidence, inspect partial changes, and complete and verify the work directly. Record caller-completed output as a hybrid result, never worker-only success. Service faults count toward the retry stop but do not alone establish model inability.

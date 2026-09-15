@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 
-from freetoken import final_report, processes, report_excerpt, snapshot, summary
+from freetoken import final_report, processes, report_excerpt, report_signals, snapshot, summary
 from task_spec import load as load_spec
 
 
@@ -29,6 +29,8 @@ assert compact["changes_count"] == 10000 and len(compact["changes_sample"]) == 5
 assert compact["independent_verification"] is None
 assert compact["report_bytes"] is None
 assert compact["report_excerpt"] is None
+assert compact["report_truncated"] is False and compact["report_requires_full_read"] is True
+assert compact["report_signals"] == {"unrun_checks": "unknown", "decision_required": "unknown", "pending_work": "unknown", "clarification_required": "unknown"}
 
 with tempfile.TemporaryDirectory(prefix="freetoken-excerpt-") as directory:
     report = Path(directory) / "report.md"
@@ -43,6 +45,10 @@ with tempfile.TemporaryDirectory(prefix="freetoken-excerpt-") as directory:
         assert excerpt.startswith(head) and excerpt.endswith(tail)
         compact = summary({"attempt_dir": str(report.parent)}, "/task")
         assert compact["report_excerpt"] == excerpt and len(json.dumps(compact)) < 5000
+        assert compact["report_truncated"] is (len(text.encode("utf-8")) > 1400)
+        assert compact["report_requires_full_read"] is compact["report_truncated"]
+    report.write_text("UNRUN_CHECKS: none\nDECISION_REQUIRED: choose A\nPENDING_WORK: docs\nCLARIFICATION_REQUIRED: yes")
+    assert report_signals(report) == {"unrun_checks": "none_declared", "decision_required": "present", "pending_work": "present", "clarification_required": "present"}
 
 RUNNER = Path(__file__).with_name("freetoken.py")
 with tempfile.TemporaryDirectory(prefix="freetoken-output-") as directory:
@@ -66,11 +72,17 @@ for line in sys.stdin:
     method, result = request['method'], {}
     if method == 'initialize': result = {'protocolVersion':1}
     elif method in ('session/new','session/resume'):
-        result = {'sessionId':'offline','configOptions':[{'id':'model','currentValue':'fake'}]}
+        result = {'sessionId':'offline','configOptions':[{'id':'model','currentValue':'fake'},
+            {'id':'reasoning_effort','currentValue':'high'}]}
+    elif method == 'session/set_config_option':
+        result = {'sessionId':'offline','configOptions':[{'id':'model','currentValue':'fake'},
+            {'id':'reasoning_effort','currentValue':request['params']['value']}]}
     elif method == 'session/prompt':
         prompt = request['params']['prompt'][0]['text']
         assert '<freetoken-report>' in prompt and '6000' in prompt and '1200' in prompt and '1400' in prompt
-        assert 'QUESTION, EVIDENCE, OPTIONS, RECOMMENDATION, CHANGES/CHECKS' in prompt
+        # Verify the transmitted protocol matches the declarations parsed by status.
+        for declaration in ('UNRUN_CHECKS:', 'DECISION_REQUIRED:', 'PENDING_WORK:', 'CLARIFICATION_REQUIRED:'):
+            assert declaration in prompt
         mode = prompt.splitlines()[0]
         text('private progress, not the final delivery\\n', 'progress')
         for i in range(100):
@@ -120,6 +132,7 @@ for line in sys.stdin:
         assert len((attempt / "events.jsonl").read_text().splitlines()) >= 100
         if status == "framed":
             assert (attempt / "report.md").read_text() == "done"
+            assert (attempt / "attempt-delta.json").is_file()
             assert result["report_bytes"] == 4
             assert result["report_excerpt"] == "done"
         else:

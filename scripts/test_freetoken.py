@@ -9,7 +9,7 @@ import sys
 import tempfile
 import time
 
-from freetoken import changed, in_scope, is_alive, processes, snapshot
+from freetoken import changed, delta, in_scope, is_alive, processes, requires_takeover, snapshot
 
 
 RUNNER = Path(__file__).with_name("freetoken.py").resolve()
@@ -83,7 +83,7 @@ with tempfile.TemporaryDirectory(prefix="freetoken-test-") as directory:
     (work / "out.txt").write_text("changed after run")
     cli("review", "--task-dir", task, "--decision", "accepted", "--evidence-file", evidence, expected=2)
     (work / "out.txt").write_text("result")
-    cli("review", "--task-dir", task, "--decision", "needs_work", "--evidence-file", evidence)
+    cli("review", "--task-dir", task, "--decision", "blocked", "--evidence-file", evidence)
     cli("resume", "--task-dir", task, "--prompt-file", prompt)
     state = json.loads((task / "state.json").read_text())
     assert state["attempt"] == 2 and state["session_id"] == sid
@@ -99,16 +99,17 @@ with tempfile.TemporaryDirectory(prefix="freetoken-test-") as directory:
     (work / "out.txt").write_text("user edited after review")
     cli("resume", "--task-dir", task, "--max-attempts", "4", expected=2)
     (work / "out.txt").write_text("repaired")
-    cli("resume", "--task-dir", task, "--max-attempts", "4")
-    cli("review", "--task-dir", task, "--decision", "accepted", "--evidence-file", evidence)
+    rejected = cli("resume", "--task-dir", task, "--max-attempts", "4", expected=2)
+    assert "caller takeover" in rejected.stdout
+    assert not (task / "attempts/0004").exists()
     cli("resume", "--task-dir", task, "--prompt-file", prompt, expected=2)
     cli("cleanup", "--task-dir", task, "--purge-raw")
     assert not list((task / "attempts").glob("*/raw"))
     assert (task / "attempts/0003/review.md").is_file()
-    assert (task / "attempts/0004/report.md").is_file()
+    assert (task / "attempts/0003/report.md").is_file()
     cli("resume", "--task-dir", task, "--prompt-file", prompt, expected=2)
     cli("cleanup", "--task-dir", task, "--purge-raw")
-    assert len(json.loads((task / "state.json").read_text())["cleanup"]["removed_raw"]) == 4
+    assert len(json.loads((task / "state.json").read_text())["cleanup"]["removed_raw"]) == 3
     one = root / "one-shot"
     cli(*start_args(one), "--one-shot")
     assert '--no-session-persistence' in json.loads((one / 'attempts/0001/argv.json').read_text())
@@ -264,6 +265,7 @@ raise SystemExit(freetoken.main())
                 time.sleep(.05)
             cli("recover", "--task-dir", task, "--evidence-file", evidence)
             assert json.loads((task / "state.json").read_text())["status"] == "interrupted"
+            assert json.loads((Path(json.loads((task / "state.json").read_text())["attempt_dir"]) / "recover.json").read_text())["status"] == "interrupted"
             # Recovery proves stopped processes, not a missing worker after-snapshot.
             cli("review", "--task-dir", task, "--decision", "needs_work", "--evidence-file", evidence, expected=2)
         finally:
@@ -288,34 +290,44 @@ raise SystemExit(freetoken.main())
     (work / "out.txt").unlink(missing_ok=True)
     turns = root / "turns"
     prompt.write_text("success")
-    cli(*start_args(turns), "--max-turns", "7")
+    cli(*start_args(turns), "--max-turns", "7", "--effort", "max")
     state = json.loads((turns / "state.json").read_text())
-    assert state["max_turns"] == 7
+    assert state["max_turns"] == 7 and state["effort"] == "max"
     argv = json.loads((turns / "attempts/0001/argv.json").read_text())
     assert argv[argv.index("--max-turns") + 1] == "7"
+    assert argv[argv.index("--effort") + 1] == "max"
     assert json.loads((turns / "attempts/0001/outcome.json").read_text())["max_turns"] == 7
     assert json.loads(cli("status", "--task-dir", turns).stdout)["max_turns"] == 7
     cli("resume", "--task-dir", turns, "--prompt-file", prompt)
     argv = json.loads((turns / "attempts/0002/argv.json").read_text())
     assert argv[argv.index("--max-turns") + 1] == "7"
+    assert argv[argv.index("--effort") + 1] == "max"
     assert json.loads((turns / "state.json").read_text())["max_turns"] == 7
-    cli("resume", "--task-dir", turns, "--prompt-file", prompt, "--max-turns", "9")
+    cli("resume", "--task-dir", turns, "--prompt-file", prompt, "--max-turns", "9", "--effort", "high")
     argv = json.loads((turns / "attempts/0003/argv.json").read_text())
     assert argv[argv.index("--max-turns") + 1] == "9"
+    assert argv[argv.index("--effort") + 1] == "high"
     assert json.loads((turns / "state.json").read_text())["max_turns"] == 9
+    assert json.loads((turns / "state.json").read_text())["effort"] == "high"
+    cli("resume", "--task-dir", turns, "--prompt-file", prompt, expected=2)
+    cli("resume", "--task-dir", turns, "--prompt-file", prompt, "--max-attempts", "4")
 
     default_turns = root / "default-turns"
     cli(*start_args(default_turns))
     assert json.loads((default_turns / "state.json").read_text())["max_turns"] == 200
+    assert json.loads((default_turns / "state.json").read_text())["effort"] == "high"
     argv = json.loads((default_turns / "attempts/0001/argv.json").read_text())
     assert argv[argv.index("--max-turns") + 1] == "200"
+    assert argv[argv.index("--effort") + 1] == "high"
     # A legacy state written before the option existed resumes at the 200-turn default.
     state = json.loads((default_turns / "state.json").read_text())
     del state["max_turns"]
+    del state["effort"]
     (default_turns / "state.json").write_text(json.dumps(state))
     cli("resume", "--task-dir", default_turns, "--prompt-file", prompt)
     argv = json.loads((default_turns / "attempts/0002/argv.json").read_text())
     assert argv[argv.index("--max-turns") + 1] == "200"
+    assert argv[argv.index("--effort") + 1] == "high"
     assert json.loads((default_turns / "state.json").read_text())["max_turns"] == 200
 
     cli(*start_args(root / "invalid-turns"), "--max-turns", "0", expected=2)
@@ -366,6 +378,7 @@ raise SystemExit(freetoken.main())
     assert json.loads((failed / "state.json").read_text())["status"] == "needs_work"
     outcome = json.loads((failed / "attempts/0001/outcome.json").read_text())
     assert outcome["status"] == "failed" and outcome["error"]
+    # One failed attempt may retry without a progress percentage or exception.
     cli("resume", "--task-dir", failed)
     state = json.loads((failed / "state.json").read_text())
     assert state["attempt"] == 2 and state["status"] == "awaiting_review"
@@ -393,7 +406,119 @@ raise SystemExit(freetoken.main())
     assert state["max_turns"] == 11
     assert (revised / "attempts/0001/review.md").read_text() == feedback.read_text()
 
+    # Runtime failure plus a rejected candidate counts once per attempt;
+    # revise saves the second review but must not launch a third worker.
+    rejected = cli("revise", "--task-dir", revised, "--evidence-file", feedback,
+                   "--max-attempts", "9", expected=2)
+    assert "caller takeover" in rejected.stdout
+    assert json.loads((revised / "state.json").read_text())["status"] == "needs_work"
+    assert json.loads((revised / "attempts/0002/review.json").read_text())["decision"] == "needs_work"
+    assert not (revised / "attempts/0003").exists()
+
+    # Each progress exception needs fresh caller evidence and >=80% resolution.
+    # The exception raises the default total to four, never beyond four.
+    progress_file = root / "progress.json"
+    progress = {"attempt": 2, "previous_issues": 10, "resolved_issues": 8,
+                "verification": "Caller reran checks for issues 1-8; see review.md.",
+                "remaining_work": "Issues 9-10 still require the scoped correction."}
+    for changes in ({"previous_issues": 100, "resolved_issues": 79}, {"attempt": 1}, {"previous_issues": True},
+                    {"previous_issues": 0}, {"resolved_issues": 11}, {"verification": ""},
+                    {"remaining_work": None}):
+        progress_file.write_text(json.dumps({**progress, **changes}))
+        cli("resume", "--task-dir", revised, "--progress-retry-evidence", progress_file, expected=2)
+        assert not (revised / "attempts/0003").exists()
+    progress_file.write_text(json.dumps(progress))
+    prior_output = (work / "out.txt").read_text()
+    (work / "out.txt").write_text("changed since caller review")
+    cli("resume", "--task-dir", revised, "--prompt-file", prompt,
+        "--progress-retry-evidence", progress_file, expected=2)
+    (work / "out.txt").write_text(prior_output)
+    cli("resume", "--task-dir", revised, "--progress-retry-evidence", progress_file)
+    assert json.loads((revised / "state.json").read_text())["attempt"] == 3
+    assert json.loads((revised / "state.json").read_text())["max_attempts"] == 4
+    assert json.loads((revised / "attempts/0002/progress-retry.json").read_text()) == progress
+    cli("revise", "--task-dir", revised, "--evidence-file", feedback,
+        "--progress-retry-evidence", progress_file, expected=2)
+    assert not (revised / "attempts/0004").exists()  # Old attempt-2 evidence is stale.
+    progress["attempt"] = 3
+    progress_file.write_text(json.dumps(progress))
+    cli("resume", "--task-dir", revised, "--progress-retry-evidence", progress_file,
+        "--max-attempts", "9")
+    assert json.loads((revised / "state.json").read_text())["attempt"] == 4
+    assert json.loads((revised / "state.json").read_text())["max_attempts"] == 4
+    progress["attempt"] = 4
+    progress_file.write_text(json.dumps(progress))
+    cli("revise", "--task-dir", revised, "--evidence-file", feedback,
+        "--progress-retry-evidence", progress_file, "--max-attempts", "9", expected=2)
+    assert not (revised / "attempts/0005").exists()
+    assert (revised / "attempts/0004/review.json").is_file()
+
+    # Progress evidence does not silently raise an explicit (or legacy unknown)
+    # cap; only a new --max-attempts choice can raise that saved limit.
+    prompt.write_text("success")
+    for cap, legacy in ((2, False), (3, False), (3, True)):
+        capped = root / f"explicit-cap-{cap}-{legacy}"
+        cli(*start_args(capped), "--max-attempts", cap)
+        cli("revise", "--task-dir", capped, "--evidence-file", feedback)
+        cli("review", "--task-dir", capped, "--decision", "needs_work", "--evidence-file", feedback)
+        state_path = capped / "state.json"
+        if legacy:
+            state = json.loads(state_path.read_text())
+            state.pop("max_attempts_explicit", None)
+            state_path.write_text(json.dumps(state))
+        progress["attempt"] = 2
+        progress_file.write_text(json.dumps(progress))
+        retry = ["resume", "--task-dir", capped, "--progress-retry-evidence", progress_file]
+        if cap == 3:
+            cli(*retry)
+            assert json.loads(state_path.read_text())["max_attempts"] == cap
+            cli("review", "--task-dir", capped, "--decision", "needs_work", "--evidence-file", feedback)
+            progress["attempt"] = 3
+            progress_file.write_text(json.dumps(progress))
+        cli(*retry, expected=2)
+        assert json.loads(state_path.read_text())["max_attempts"] == cap
+        assert not (capped / "attempts" / f"{cap + 1:04d}").exists()
+        cli(*retry, "--max-attempts", "4")
+        assert json.loads(state_path.read_text())["attempt"] == cap + 1
+
+    # Two provider failures also stop bare resume; blocked review cannot erase
+    # the original outcome, and partial progress does not make failure success.
+    double_fail = root / "double-fail"
+    prompt.write_text("fail")
+    cli(*start_args(double_fail), expected=2)
+    cli("resume", "--task-dir", double_fail, "--prompt-file", prompt, expected=2)
+    cli("review", "--task-dir", double_fail, "--decision", "blocked", "--evidence-file", feedback)
+    rejected = cli("resume", "--task-dir", double_fail, "--prompt-file", prompt,
+                   "--max-attempts", "9", expected=2)
+    assert "caller takeover" in rejected.stdout
+    assert json.loads((double_fail / "state.json").read_text())["attempt"] == 2
+    assert json.loads((double_fail / "attempts/0001/outcome.json").read_text())["status"] == "failed"
+    assert not (double_fail / "attempts/0003").exists()
+
+    # A recovered controller crash can lack outcome.json. Its recovery record
+    # must survive later handbacks; unreviewed returns do not reset failures.
+    history = root / "recovered-history"
+    for number, record, data in (
+            (1, "recover.json", {"status": "interrupted"}),
+            (2, "review.json", {"decision": "blocked"}),
+            (3, "outcome.json", {"status": "awaiting_review"}),
+            (4, "outcome.json", {"status": "timed_out"})):
+        attempt = history / "attempts" / f"{number:04d}"
+        attempt.mkdir(parents=True)
+        (attempt / record).write_text(json.dumps(data))
+        assert requires_takeover(history, {"attempt": number, "status": data.get("status")}) == (number == 4)
+
     before = snapshot(work)
     (work / "out.txt").unlink()
     assert changed(before, snapshot(work)) == ["out.txt"]
+    assert delta(before, snapshot(work))[0]["kind"] == "deleted"
+    before = snapshot(work)
+    tracked = work / "keep.txt"
+    content = tracked.read_text()
+    tracked.unlink()
+    deleted = snapshot(work)
+    assert deleted["files"]["keep.txt"] is None
+    assert delta(before, deleted)[0]["kind"] == "deleted"
+    tracked.write_text(content)
+    assert delta(deleted, snapshot(work))[0]["kind"] == "added"
 print("Dispatch lifecycle checks passed")
