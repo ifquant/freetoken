@@ -141,6 +141,19 @@ for line in sys.stdin:
             assert result["report_excerpt"] is None
         compact = cli("status", "--task-dir", task, "--summary")
         assert len(compact.splitlines()) == 1 and json.loads(compact)["report_status"] == status
+    # The shared alignment gate also preserves the dsh ACP session and framing.
+    aligned = root / "aligned-dsh"
+    prompt.write_text("valid\n")
+    planned = json.loads(cli("start", "--task-dir", aligned, "--cwd", work, "--backend", "dsh",
+                             "--model", "fake", "--executable", fake, "--prompt-file", prompt,
+                             "--budget", "5", "--align"))
+    assert planned["status"] == "blocked" and planned["alignment_ready"]
+    assert planned["report_status"] == "framed"
+    cli("resume", "--task-dir", aligned, expected=2)
+    implemented = json.loads(cli("resume", "--task-dir", aligned, "--prompt-file", prompt))
+    assert implemented["session_id"] == planned["session_id"] == "offline"
+    assert implemented["status"] == "awaiting_review" and not implemented["alignment_pending"]
+
     task = root / "valid"
     prompt.write_text("valid\n")
     stdout = cli("resume", "--task-dir", task, "--prompt-file", prompt, "--output", "events")

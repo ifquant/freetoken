@@ -10,9 +10,11 @@ import time
 
 class ACP:
     def __init__(self, argv, cwd, stderr, on_update=None, on_permission=None):
+        worker_env = os.environ.copy()
+        worker_env.setdefault("PYTHONDONTWRITEBYTECODE", "1")
         self.process = subprocess.Popen(
             argv, cwd=cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=stderr, start_new_session=True,
+            stderr=stderr, start_new_session=True, env=worker_env,
         )
         self.selector = selectors.DefaultSelector()
         self.selector.register(self.process.stdout, selectors.EVENT_READ)

@@ -1,47 +1,56 @@
 # Stage dispatch brief
 
-Use one brief per independently acceptable stage. Reference existing requirements; when a TaskSpec already supplies the contract, add only missing context through its goal or context files. Backend/model selection belongs to the actual dispatch, not this reusable template.
+Use one brief per independently acceptable outcome. Reuse requirements and
+existing TaskSpec goal/context; add only missing information. Backend/model,
+effort and permissions belong to dispatch, not this template. Include only
+applicable fields: empty headings are not questions or blockers.
 
-## Copyable brief
+For substantial implementation this becomes the caller's draft under
+[caller-plan-v1](caller-plan-v1.md). The same contract is finalized after worker
+feedback; no separate competing template or report format is needed.
+
+## Brief content
 
 ```markdown
 # Stage: <name>
 
 ## Outcome and boundary
 - Complete when: <observable result>
-- Entry points and allowed writes: <paths; scope.write is authoritative>
+- Entry points and allowed writes: <paths; TaskSpec scope.write when used>
 - Preserve/exclude: <invariants, interfaces and out-of-scope work>
 - Inputs and handback artifacts: <dependencies and deliverables>
 - Authoritative context: <links or small context_files>
 
-## Relevant behavior
-- Initial state and first real use: <when they affect correctness>
-- Edge cases: <inputs/failures and expected behavior>
-- Milestones: <ordered outcomes for complex work; let the worker choose routine implementation steps>
+## Caller design and ordered outcomes
+- Evidence and diagnosis: <code references; facts versus hypotheses>
+- Fixed decisions: <ownership, interfaces and irreversible effects where relevant>
+- Proposed approach: <choices for the worker to inspect and supplement>
+- Ordered outcomes: <coherent root-cause changes, dependencies and evidence>
+- Impact: <other callers, shared state and neighboring workflows to preserve>
+- Relevant behavior: <initial use, failure, recovery or timing when material>
+- Unresolved decisions: <material conflicts and affected work that must wait>
 
 ## Acceptance
-- Environment: <required platform, tools, data and access; no credentials in the brief>
-- Checks: <exact commands and working directory, expected results>
-- Evidence: <deliverable paths, results/logs and source revision or snapshot where relevant>
-- Required real execution: <checks that skips, mocks or other environments cannot satisfy>
-
-## Caller decisions
-<Unsettled choices or conflicting requirements that would change behavior, scope,
-interfaces or acceptance. State what affected work must wait.>
+- Environment: <platform, tools, data and access; no credentials>
+- Existing test baseline: <relevant suites, commands, pass criteria; known failures or unrun checks>
+- Planned test additions/changes: <implementation risks and cases; worker supplements during alignment>
+- Checks: <commands, working directory and expected observations>
+- Positive: <legitimate use, including the counterpart of each restriction>
+- Negative: <invalid/failing/stale actions with no prohibited effect>
+- Regression: <affected existing behavior>
+- Required real execution: <what a skip, mock or substitute cannot establish>
+- Evidence: <artifacts/results and corresponding revision or snapshot>
 
 ## Delivery
-<Task-specific evidence needed for review. The runner supplies the common report
-format and machine declarations; do not add a competing format.>
+<Worker runs the agreed tests and repairs/retests before handback. Include actual
+results, failed/unrun checks and remaining work for caller independent acceptance;
+use the runner's common report format.>
 ```
 
-Resolve routine gaps using authoritative documents, code and tests before asking.
-Only return a decision when evidence remains missing or contradictory and the
-choice would materially change behavior, scope, interfaces, acceptance or an
-irreversible result. Do not redefine an explicit contract. A missing initial-state
-or first-use heading alone does not require a question.
+Choose checks for the risk and affected behavior, not to fill every row. Prefer
+existing focused tests; add integration/full regression when the impact or frozen
+acceptance requires it. Preserve actual exit codes in evidence. An unavailable
+required environment is a blocker, not permission to lower acceptance.
 
-Continue authorized implementation and checks through a reviewable result.
-When a real decision is needed, stop the affected work, report its scope and
-evidence, and end the attempt so the caller can decide. Complete independent
-in-scope work when useful and safe. Missing required environment/access/data
-remains an explicit blocker; never weaken acceptance to obtain a pass.
+The runner supplies common scope, decision-handback and delivery instructions.
+Do not paste this whole skill or its reference library into the worker prompt.

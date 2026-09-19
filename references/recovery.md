@@ -20,10 +20,12 @@ guarantee cache retention.
 
 ## Retry rule
 
-The first failed attempt may receive a normal retry without a percentage
-requirement. After two failed attempts, default to caller takeover. The exception
-below permits another attempt when the caller verifies sufficient progress in
-the latest failed attempt.
+The first failed attempt may receive a normal retry. After two failures the caller
+must diagnose the cause, rather than repeat feedback or automatically take over
+everything. Distinguish understanding, scope, design, contract, environment and
+implementation. Provide missing boundaries/examples, narrow an independently
+acceptable outcome, or take over just the nonconverging part. Never lower
+acceptance to obtain a pass. A service fault alone does not prove model inability.
 
 Execution errors, timeout/turn-limit exhaustion, cancellation/interruption, scope
 violations and `needs_work` reviews count once per attempt. Decision-only handbacks
@@ -32,14 +34,78 @@ outcomes, per-attempt `review.json` decisions and `recover.json` records; a fail
 execution and its rejection count once. Legacy prose-only reviews/recoveries need
 caller inspection under the same rule.
 
-Default total attempts are three, including decision handbacks. Raising
+Default total attempts are four with `--align`, otherwise three, including all
+alignment and decision handbacks. Raising
 `--max-attempts` alone cannot bypass the two-failure gate. Never create a
 replacement task or switch workers to evade it. Service faults count toward the
 retry stop but do not alone establish model inability.
 
-The four-attempt cap below applies once the progress exception is needed. Before
+The four-attempt cap applies once an assessment or progress exception is needed. Before
 two failures, ordinary continuation still uses the configured total attempt limit;
 an unaccepted decision handback alone does not count as a failed attempt.
+
+### Diagnosed retry
+
+After recording `needs_work` (or confirming a successful alignment after earlier
+failures), supply a fresh caller-authored assessment:
+
+```json
+{
+  "task_id": "existing-task",
+  "session_id": "existing-confirmed-session",
+  "next_attempt": 4,
+  "cause": "understanding",
+  "diagnosis": "The worker rejected valid operations along with stale ones.",
+  "evidence": "Independent positive and negative cases in review.md.",
+  "adjustment": "Bind validation to the operation owner; preserve current-owner success.",
+  "remaining_work": "Correct ownership validation and its affected callers.",
+  "verification": "Run focused positive/negative checks, then integration and regression."
+}
+```
+
+```sh
+python3 <skill-dir>/scripts/freetoken.py resume --task-dir <state-dir> \
+  --retry-assessment <assessment.json> --prompt-file <updated-feedback.md> --budget 300
+```
+
+`cause` is one of `understanding`, `scope`, `design`, `contract`, `environment`,
+`implementation`. The runner checks task/session/next-attempt binding, nonempty
+fields, immutable snapshots, unchanged workspace/scope/HEAD and stopped observed
+processes. It appends the assessment to the worker prompt and archives it in the
+new attempt; the caller owns the truth of its diagnosis. No percentage estimate
+is required. Assessed continuations stop at four total invocations and preserve
+smaller explicit limits. An explicit user-authorized extension below is separate.
+Do not repeatedly file identical assessments without new evidence or adjustment.
+
+### Explicit user authorization
+
+When the user explicitly requests another attempt despite the progress gate,
+`resume` or `revise` can use `--user-retry-authorization FILE` instead of
+`--progress-retry-evidence`. Record the actual user instruction and its source;
+do not invent an authorization or report unverified progress as 80% resolved.
+
+```json
+{
+  "task_id": "existing-task",
+  "session_id": "existing-confirmed-session",
+  "next_attempt": 3,
+  "user_instruction": "Retry a third time in the same session.",
+  "instruction_source": "Current conversation, user message requesting the third attempt"
+}
+```
+
+```sh
+python3 <skill-dir>/scripts/freetoken.py resume --task-dir <state-dir> \
+  --user-retry-authorization <authorization.json> --budget 3600
+```
+
+This caller-recorded authorization applies only to the named next attempt. It
+waives the two-failure progress percentage and the four-attempt progress ceiling,
+but not the saved attempt limit. Use an explicit `--max-attempts` increase when
+the user authorizes another attempt beyond the saved limit. The task must have a `needs_work` review and pass snapshot,
+scope, HEAD, and stopped-process checks. Old outcomes/reviews remain untouched;
+the new attempt retains `user-retry-authorization.json`. The runner validates
+binding and evidence, not whether the quoted user instruction is authentic.
 
 ### Progress exception: at least 80% resolved, at most four total attempts
 
@@ -84,8 +150,10 @@ The caller owns the truth and significance of the issue closures.
 ## Caller takeover
 
 Preserve outcomes and useful partial work, record `needs_work` before editing
-when the review gate permits it, and confirm stopped writers. Inspect and complete
-the remaining work, then independently check caller changes. Record hybrid
+when the review gate permits it, and confirm stopped writers. Record the cause,
+exact takeover scope, retained worker work and remaining checks. Complete only
+the necessary part, then independently check both caller changes and their
+composition with worker work. Record hybrid
 completion rather than accepting caller-fixed work as worker-only success.
 An unavailable required environment/access/data remains an external blocker.
 
@@ -122,6 +190,12 @@ crash left no outcome.
 evidence and user edits; resolve exact offending changes. Recovery checks that
 they match the before snapshot. Never silently reset user work. Ignored files
 and nested submodules are not exhaustively protected.
+
+Successful scope recovery records `recovered.json` and its digest without
+rewriting `after.json` or the original failed outcome. Assessed/user-authorized
+continuation checks the unchanged recovered workspace, restored scope/HEAD and
+immutable original evidence. Historical `status --verify` still shows the failed
+attempt's scope violation; recovery does not turn that attempt into success.
 
 `failed`, `timed_out`, `cancelled` and `interrupted` may be reviewed only as
 `needs_work` or `blocked`, with stopped observed processes and matching

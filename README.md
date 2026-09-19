@@ -16,7 +16,7 @@ Simply ask Codex:
 
 Then invoke `$freetoken` in your project and describe the task. You still need a working dsh or CodeBuddy backend; installing the skill does not configure those services.
 
-For the installing agent: install root `SKILL.md`, `scripts/`, and the four operating references `references/dispatch-brief.md`, `references/runtime.md`, `references/recovery.md`, `references/measurement.md` under the user's Codex skills directory as `freetoken`. Other reference projects and experiments are not needed.
+For the installing agent: install root `SKILL.md`, `scripts/`, and the five operating references `references/dispatch-brief.md`, `references/runtime.md`, `references/recovery.md`, `references/measurement.md`, `references/caller-plan-v1.md` under the user's Codex skills directory as `freetoken`. Other reference projects and experiments are not needed.
 
 ## Prerequisites
 
@@ -35,7 +35,7 @@ The current runner uses full backend permissions. Review the permission and scop
 
 ## Use in another project
 
-For manual installation, copy `SKILL.md`, `scripts/` and the four operating references listed above to `~/.codex/skills/freetoken/`, preserving their relative paths. For local development, `scripts/` can link to your checkout; synchronize the installed entry and operating references together. Check existing files before replacing them. Do not install reference projects as additional skills.
+For manual installation, copy `SKILL.md`, `scripts/` and the five operating references listed above to `~/.codex/skills/freetoken/`, preserving their relative paths. For local development, `scripts/` can link to your checkout; synchronize the installed entry and operating references together. Check existing files before replacing them. Do not install reference projects as additional skills.
 
 In a new Codex task, invoke `$freetoken` and specify the project, objective, backend, and allowed changes. For example:
 
@@ -44,6 +44,12 @@ In a new Codex task, invoke `$freetoken` and specify the project, objective, bac
 See [SKILL.md](SKILL.md) for the operating rules. If the skill is not yet available in the current task, ask Codex to read that file explicitly. Check discovery in a new task after installation.
 
 ## Run directly
+
+Default for substantial implementation: [caller-plan-v1](references/caller-plan-v1.md).
+Caller drafts, worker reviews read-only, then caller issues the final execution
+plan in the same session. Invoke freetoken normally; no version keyword or manual
+reference selection is needed. Mechanical work can use the lighter direct path.
+Include caller planning in usage measurement. Frozen old experiments stay unchanged.
 
 Prepare a Git workspace with at least one commit, a task description outside that workspace, and a task-state directory that does not yet exist:
 
@@ -88,9 +94,12 @@ Cancellation and timeout can leave partial edits. Inspect status when process st
 
 First-round candidate: dispatch defaults to bounded summaries (`--output events` restores diagnostic events); `status --summary` is compact. Detailed events remain local. dsh stream text is separate from explicitly framed final reports. The optional [caller meter and pending calibration](docs/008-caller-calibration.md) defaults to preflight, not model execution. Shorter skill/output does not prove token or subscription savings.
 
+After a terminal attempt, `status --summary --verify` checks snapshots, scope, recorded change lists and observed processes without printing raw records or accepting the result. False checks or missing evidence return 2. Still inspect actual code and run independent checks; failed workers can pass mechanical checks. See [dispatch and independent review](references/runtime.md).
+
 ```sh
 python3 -B scripts/test_acp_stdio.py
 python3 -B scripts/test_freetoken.py
+python3 -B scripts/test_alignment.py
 python3 -B scripts/test_output.py
 python3 -B experiments/test_codex_meter.py
 ```
@@ -120,7 +129,7 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py cleanup \
   --task-dir <task-dir> --purge-raw
 ```
 
-Budget for one complete stage and its checks. CodeBuddy already defaults to 200 turns (`--max-turns`), retained on continuation; wall time is separate. Tasks default to three total attempts, including decision handbacks. Two consecutive failed attempts normally require caller takeover: execution errors, timeout/turn-limit exhaustion, cancellation/interruption, scope violations and rejected candidates (`needs_work`) count once per attempt. Decision-only handbacks and unreviewed normal returns do not reset failures. A [progress exception](references/recovery.md#progress-exception-at-least-80-resolved-at-most-four-total-attempts) permits up to four total attempts, including the initial attempt, if the caller independently verifies at least 80% of the prior issue set was resolved and remaining work is bounded. Each extra retry requires fresh `--progress-retry-evidence`; raising `--max-attempts` alone does not suffice. Preserve evidence and useful partial work. Legacy prose-only reviews remain the caller's responsibility. Do not open a replacement task or switch workers to evade takeover.
+Budget for the complete stage and its checks. CodeBuddy defaults to 200 turns, retained on continuation; wall time is separate. For substantial implementation the caller first drafts the execution plan; `--align` asks the worker to inspect, explain and supplement it. The caller resolves disagreements and supplies the complete final plan using `resume --prompt-file`, then the same session implements end to end. This consumes one invocation, so defaults are four total with alignment and three without. After two failures, diagnose and adapt with a fresh [retry assessment](references/recovery.md#diagnosed-retry), bounded to four total invocations. Smaller explicit limits remain binding. Legacy 80% progress evidence and explicit user authorization remain supported. Decision handbacks do not erase failures; raising `--max-attempts` alone or replacing the task/worker cannot bypass the gate.
 
 A one-shot task permits one submission and no automatic corrections. CodeBuddy uses native `--no-session-persistence`; dsh may still retain backend history. Task results and review evidence remain available. “One-shot” does not mean “no records.”
 
@@ -145,4 +154,9 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py resume \
 
 A `blocked` task cannot use bare `resume` or `revise`. The explicit decision is saved as `decision.md` in the original attempt. Worker questions are not automatically approved, and native tool permission approval does not authorize a new scope or design decision. Existing full-permission settings remain unchanged.
 
-Take over earlier when another handoff and review costs more than finishing directly. After two consecutive failures, require the verified progress exception for any further retry; take over after four total attempts regardless of that exception. Confirm stopped writers, preserve the original evidence, inspect partial changes, and complete and verify the work directly. Record caller-completed output as a hybrid result, never worker-only success. Service faults count toward the retry stop but do not alone establish model inability.
+Group corrections by root cause, not files. Require positive, negative and regression evidence, pairing restrictions with legitimate paths that must still work. After repeated failure the caller adjusts task size/support to demonstrated worker boundaries, or takes over only the genuinely nonconverging part. Confirm stopped writers, record cause/scope/retained work, preserve evidence and independently verify the composed result. Record hybrid completion and separate caller/worker/communication usage; never claim worker-only success. Service faults alone do not establish model inability. Do not silently extend retries beyond the bounded policy.
+### TaskSpec (experimental entry)
+
+Use `scripts/freetoken.py start --spec spec.json` for the minimal contract:
+`goal`, `scope.write`, explicit `acceptance.commands`, and `limits`. Checks are
+never inferred from worker prose; legacy `start/resume/revise` remains usable.

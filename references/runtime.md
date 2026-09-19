@@ -10,7 +10,7 @@ not automatically writers. State lives outside the worker Git root.
 python3 <skill-dir>/scripts/freetoken.py start \
   --task-dir <fresh-state-dir> --cwd <git-root> \
   --backend codebuddy --model <model-id> --effort high --prompt-file <task.md> \
-  --allow src/module.py --budget 300
+  --allow src/module.py --align --budget 300
 python3 <skill-dir>/scripts/freetoken.py status --task-dir <state-dir> --summary
 ```
 
@@ -32,6 +32,27 @@ Wait on the existing process handle. An observation timeout is not a failed
 dispatch. Default output is a bounded summary; `--output events` exposes
 diagnostic events when needed. Full logs stay local.
 
+`--align` makes the first invocation read-only. A successful plan handback has
+`status=blocked`, `alignment_ready=true` and exit 0, not implementation acceptance.
+Under the default [caller-plan-v1](caller-plan-v1.md), the initial prompt is the
+caller's draft. Inspect the worker's understanding, code-backed corrections and
+impact/tests; resolve material decisions and issue the full final execution plan:
+
+```sh
+python3 <skill-dir>/scripts/freetoken.py resume --task-dir <state-dir> \
+  --prompt-file <caller-final-execution-plan.md> --budget 300
+```
+
+The same session continues to implementation. Bare resume and acceptance of the
+plan are rejected; failed alignment stays read-only on retry. Recorded writes
+during alignment are scope violations even inside the later implementation
+allowlist. Ignored files and outside-worktree effects are not sandboxed. Explicit
+reference reads named in the task are permitted; writes remain scoped to the Git
+root. Handle an external dependency as separately audited caller work, not an
+untracked worker exception. `--align` cannot be combined with `--one-shot`.
+Default total attempts are four with alignment, otherwise three. Alignment and
+decision handbacks consume attempts and usage; explicit limits include them.
+
 ## Review and close
 
 ```sh
@@ -45,7 +66,7 @@ identities. Missing/false evidence returns 2. It is a point-in-time check of
 recorded non-ignored files and observed processes, not a sandbox or semantic
 acceptance. A failed worker may pass these mechanical checks and remains failed.
 
-For TaskSpec tasks, verification also runs registered acceptance commands after
+For TaskSpec tasks outside pending alignment, verification also runs registered acceptance commands after
 checking the spec hash, then rechecks the workspace. The response includes
 `verification_status`, `acceptance_checks` and a retained receipt. Commands may
 write files; failed commands or check-induced workspace changes return 2.
@@ -69,8 +90,9 @@ link longer details locally. dsh keeps a 6000-byte framing limit; status shows a
 acceptance criteria.
 
 For rejected candidates, clarification, continuation, one-shot tasks or takeover,
-use [correction and recovery](recovery.md). Default total attempts are three;
-the two-failure gate and progress exception are described there.
+use [correction and recovery](recovery.md), including the two-failure reassessment
+gate. One alignment plus three implementation invocations is four total, not
+four implementation retries.
 
 ## TaskSpec
 

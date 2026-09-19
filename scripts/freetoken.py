@@ -174,6 +174,40 @@ def progress_retry_evidence(path, state):
     return evidence
 
 
+def user_retry_authorization(path, state):
+    """Bind a caller-recorded explicit user instruction to one continuation."""
+    authorization = read(Path(path))
+    if not isinstance(authorization, dict):
+        raise ValueError("User retry authorization must be a JSON object")
+    if (authorization.get("task_id") != state["task_id"]
+            or authorization.get("session_id") != state["session_id"]
+            or type(authorization.get("next_attempt")) is not int
+            or authorization["next_attempt"] != state["attempt"] + 1):
+        raise ValueError("User retry authorization must match this task, session and next attempt")
+    for field in ("user_instruction", "instruction_source"):
+        if not isinstance(authorization.get(field), str) or not authorization[field].strip():
+            raise ValueError(f"User retry authorization requires {field}")
+    return authorization
+
+
+def retry_assessment(path, state):
+    """Require a fresh caller diagnosis and a changed approach, not a blind retry."""
+    assessment = read(Path(path))
+    if not isinstance(assessment, dict):
+        raise ValueError("Retry assessment must be a JSON object")
+    if (assessment.get("task_id") != state["task_id"]
+            or assessment.get("session_id") != state["session_id"]
+            or type(assessment.get("next_attempt")) is not int
+            or assessment["next_attempt"] != state["attempt"] + 1):
+        raise ValueError("Retry assessment must match this task, session and next attempt")
+    if assessment.get("cause") not in {"understanding", "scope", "design", "contract", "environment", "implementation"}:
+        raise ValueError("Retry assessment requires a supported cause category")
+    for field in ("diagnosis", "evidence", "adjustment", "remaining_work", "verification"):
+        if not isinstance(assessment.get(field), str) or not assessment[field].strip():
+            raise ValueError(f"Retry assessment requires caller {field}")
+    return assessment
+
+
 def result_detail(result, limit=400):
     """Compact provider-failure diagnostics; no raw reasoning or synthesized report."""
     if not result:
@@ -234,6 +268,8 @@ def summary(state, folder):
     result = {key: short(state.get(key)) for key in
               ("task_id", "status", "observed_status", "backend", "model", "effort", "session_id")}
     result.update(task_dir=short(folder), attempt=state.get("attempt"),
+                  alignment_pending=bool(state.get("alignment_pending")),
+                  alignment_ready=bool(state.get("alignment_ready")),
                   attempt_dir=short(attempt), elapsed_s=state.get("elapsed_s"),
                   controller_alive=state.get("controller_alive"), worker_alive=state.get("worker_alive"),
                   cleanup_required=bool(state.get("cleanup_required")), error=short(state.get("error"), 400),
@@ -270,7 +306,8 @@ def evidence_checks(state):
     attempt = Path(state["attempt_dir"])
     before, after = read(attempt / "before.json"), read(attempt / "after.json")
     names = changed(before, after)
-    outside = [name for name in names if not in_scope(name, state["allow"])]
+    scope = [] if state.get("alignment_pending") else state["allow"]
+    outside = [name for name in names if not in_scope(name, scope)]
     if before["head"] != after["head"]:
         outside.append("<Git HEAD changed>")
     identities = [state.get("controller"), state.get("worker"), *state.get("known_processes", [])]
@@ -289,7 +326,7 @@ def write_verification_receipt(state, checks):
     """Persist mechanical evidence without upgrading semantic acceptance."""
     attempt = Path(state["attempt_dir"])
     approved = []
-    if state.get("spec_path"):
+    if state.get("spec_path") and not state.get("alignment_pending"):
         spec, actual_hash = load_spec(state["spec_path"])
         if actual_hash != state.get("spec_sha256"):
             raise RuntimeError("TaskSpec changed or lacks its recorded hash; refusing unverified acceptance commands")
@@ -313,6 +350,27 @@ def write_verification_receipt(state, checks):
                "remaining_risks": ["semantic acceptance remains caller-owned"]}
     save(attempt / "verification.json", receipt)
     return receipt
+
+
+def continuation_checks(state):
+    """A repaired scope violation has a new baseline, never a rewritten outcome."""
+    checks = evidence_checks(state)
+    if not state.get("recovered_snapshot_sha256"):
+        return checks
+    attempt = Path(state["attempt_dir"])
+    recovered = read(attempt / "recovered.json")
+    before = read(attempt / "before.json")
+    scope = [] if state.get("alignment_pending") else state["allow"]
+    # Keep immutable original failure evidence, but validate current scope/HEAD
+    # against the caller-recorded recovery instead of the offending after state.
+    return {key: checks[key] for key in (
+        "recorded_before_immutable", "recorded_after_immutable",
+        "recorded_changes_match", "observed_processes_stopped")} | {
+        "recovery_snapshot_immutable": snapshot_digest(recovered) == state["recovered_snapshot_sha256"],
+        "workspace_matches_recovery": snapshot(Path(state["cwd"])) == recovered,
+        "head_restored": recovered["head"] == before["head"],
+        "scope_restored": all(in_scope(name, scope) for name in changed(before, recovered)),
+    }
 
 
 def final_report(messages):
@@ -376,6 +434,7 @@ class Run:
         (self.attempt / "prompt.md").write_text(prompt)
         self.prompt = prompt
         self.before = snapshot(self.cwd)
+        state.pop("recovered_snapshot_sha256", None)
         save(self.attempt / "before.json", self.before)
         (self.attempt / "before.diff").write_text(git(
             self.cwd, "diff", "--no-ext-diff", "--no-textconv", "--binary", "HEAD"))
@@ -669,6 +728,10 @@ def dsh(run):
 def dispatch(args):
     folder = Path(args.task_dir).expanduser().resolve()
     if args.command == "start":
+        if args.align and args.one_shot:
+            raise ValueError("--align requires a resumable session; do not use --one-shot")
+        if args.align and args.max_attempts is not None and args.max_attempts < 2:
+            raise ValueError("--align needs at least two attempts: plan and implementation")
         if args.backend == "dsh" and args.max_turns is not None:
             raise ValueError("--max-turns is only valid for the codebuddy backend")
         cwd = Path(args.cwd).expanduser().resolve()
@@ -688,7 +751,8 @@ def dispatch(args):
                  "effort": args.effort or DEFAULT_EFFORT,
                  "allow": args.allow, "session_id": str(uuid.uuid4()) if args.backend == "codebuddy" else None,
                  "session_confirmed": False, "attempt": 0, "status": "new", "permission_mode": "full",
-                 "one_shot": args.one_shot, "max_attempts": args.max_attempts or 3,
+                 "one_shot": args.one_shot, "max_attempts": args.max_attempts or (4 if args.align else 3),
+                 "alignment_pending": args.align, "alignment_ready": False,
                  "max_attempts_explicit": args.max_attempts is not None}
         if getattr(args, "spec_hash", None):
             state.update(spec_path=str(Path(args.spec).resolve()), spec_sha256=args.spec_hash,
@@ -711,16 +775,30 @@ def dispatch(args):
         # preserve their limit unless the caller explicitly raises it.
         explicit_limit = args.max_attempts is not None or state.get("max_attempts_explicit", True)
         progress = None
+        authorization = None
+        assessment = None
         progress_path = getattr(args, "progress_retry_evidence", None)
+        authorization_path = getattr(args, "user_retry_authorization", None)
+        assessment_path = getattr(args, "retry_assessment", None)
+        if sum(bool(p) for p in (progress_path, authorization_path, assessment_path)) > 1:
+            raise ValueError("Choose one retry exception")
         if requires_takeover(folder, state):
-            if state["attempt"] >= 4 or not progress_path:
-                raise RuntimeError("Two failed attempts require caller takeover unless current caller evidence proves at least 80% of prior issues resolved; progress retries stop at four total attempts. --max-attempts alone cannot override this gate")
-            if state["status"] != "needs_work":
-                raise RuntimeError("Record a needs_work review before requesting a progress retry")
-            progress = progress_retry_evidence(progress_path, state)
-            limit = min(limit if explicit_limit else 4, 4)
-        elif progress_path:
-            raise ValueError("Progress retry evidence is only needed after two failed attempts")
+            if not authorization_path and (state["attempt"] >= 4 or not (progress_path or assessment_path)):
+                raise RuntimeError("Two failed attempts require caller takeover or reassessment: supply --retry-assessment, >=80% progress evidence or --user-retry-authorization; assessed/progress retries stop at four total attempts. --max-attempts alone cannot override this gate")
+            if state["status"] != "needs_work" and not state.get("alignment_ready"):
+                raise RuntimeError("Record a needs_work review before requesting a retry exception")
+            if authorization_path:
+                authorization = user_retry_authorization(authorization_path, state)
+                # A fresh user instruction can exceed the progress-retry ceiling.
+                # The configured attempt limit still requires an explicit raise.
+            elif assessment_path:
+                assessment = retry_assessment(assessment_path, state)
+                limit = min(limit if explicit_limit else 4, 4)
+            else:
+                progress = progress_retry_evidence(progress_path, state)
+                limit = min(limit if explicit_limit else 4, 4)
+        elif progress_path or authorization_path or assessment_path:
+            raise ValueError("Retry exceptions are only needed after two failed attempts")
         if state["attempt"] >= limit:
             raise RuntimeError("Attempt limit reached; reassess before explicitly raising --max-attempts")
         cwd = Path(state["cwd"])
@@ -729,6 +807,11 @@ def dispatch(args):
             previous = lease.read()
             if previous and json.loads(previous).get("active"):
                 raise RuntimeError("Workspace has an unsettled prior owner; inspect and recover that task")
+            if authorization is not None or assessment is not None or state.get("alignment_ready"):
+                checks = continuation_checks(state)
+                if not all(checks.values()):
+                    failed = ", ".join(key for key, passed in checks.items() if not passed)
+                    raise RuntimeError(f"Continuation cannot bypass evidence checks: {failed}")
             if progress is not None and snapshot(cwd) != read(Path(state["attempt_dir"]) / "after.json"):
                 raise RuntimeError("Workspace changed since review; progress retry evidence is stale")
             if getattr(args, "prompt_text", None) is not None:
@@ -744,6 +827,11 @@ def dispatch(args):
                 raise ValueError("Provide an explicit decision/instruction via --prompt-file; only needs_work can reuse review")
             if not prompt.strip():
                 raise ValueError("Empty prompt")
+            if state.get("alignment_ready"):
+                if not args.prompt_file:
+                    raise ValueError("Alignment requires explicit caller confirmation/adjustment via --prompt-file")
+                (Path(state["attempt_dir"]) / "decision.md").write_text(prompt)
+                state.update(alignment_pending=False, alignment_ready=False)
             if state["status"] == "blocked":
                 (Path(state["attempt_dir"]) / "decision.md").write_text(prompt)
             if progress is not None:
@@ -754,16 +842,37 @@ def dispatch(args):
             if state["backend"] == "codebuddy":
                 state["max_turns"] = resolved_max_turns(state, getattr(args, "max_turns", None))
             state["effort"] = resolved_effort(state, getattr(args, "effort", None))
-            scope = ", ".join(state["allow"]) or "none (read-only task)"
-            prompt += (f"\n\nWorker contract: work only in {cwd}. Preserve existing changes. "
+            if assessment is not None:
+                prompt += "\n\nCaller retry assessment (follow the adjusted approach):\n" + json.dumps(assessment, ensure_ascii=False)
+            alignment = state.get("alignment_pending", False)
+            scope = "none (read-only alignment)" if alignment else (", ".join(state["allow"]) or "none (read-only task)")
+            if alignment:
+                prompt = ("ALIGNMENT ONLY: the task below is context for later implementation, not authorization "
+                          "to edit now. Read relevant code without changing files or running mutating checks. "
+                          "Briefly report your understanding, root cause or investigation hypothesis, next plan, "
+                          "affected callers/shared state, positive/negative/regression checks and material questions. "
+                          "Do not implement. Return control for one caller confirmation or adjustment; do not ask "
+                          "the user for routine approval.\n\nTask context:\n" + prompt)
+            prompt += (f"\n\nWorker contract: the only implementation workspace is {cwd}. "
+                       "Read external references only when explicitly named by the task. Preserve existing changes. "
                        f"Allowed changes: {scope}. Do not edit other files, Git metadata, or commit. "
                        "Use existing full permissions only for this task; do not send external messages or deploy. "
                        "Do not spawn additional agents unless the task explicitly requests them. "
                        "The caller owns scope, decisions and acceptance. Resolve routine gaps from authoritative "
                        "documents, code and tests; preserve explicit requirements. Make low-risk reversible "
                        "implementation choices locally. A missing template heading alone is not a blocker. "
-                       "Continue authorized work through implementation and required checks. Use current check "
+                       "During alignment, stop after the read-only plan. Otherwise complete the root-cause outcome "
+                       "through implementation and required checks. Consider affected callers, shared state and "
+                       "neighboring workflows. Test both what must work and what must be rejected or preserved; "
+                       "pair each safety restriction with a legitimate path that must still work. Run focused "
+                       "checks during changes and relevant integration/full regression before handback. Use current check "
                        "results; rerun affected checks after changes, failures or unresolved concerns. "
+                       "Once implementation is authorized, add or update the agreed tests, fix failures caused by "
+                       "your changes and retest within scope and budget before handback; do not defer first-pass "
+                       "debugging to the caller. Never delete, skip or weaken required tests merely to obtain a pass. "
+                       "If unable to pass, report attempted fixes and failed/unrun checks as incomplete, distinguishing "
+                       "pre-existing failures from introduced regressions. Self-test precedes, but does not replace, "
+                       "the caller's independent acceptance. "
                        "If evidence remains missing or contradictory and a choice would materially change behavior, "
                        "scope, interfaces, acceptance or an irreversible result, stop the affected work and return "
                        "the decision to the caller. Complete independent in-scope work when useful and safe, then "
@@ -782,6 +891,16 @@ def dispatch(args):
                            "Put all delivery fields and declarations inside that block. Do not put any text "
                            "after the closing delimiter, and do not use these delimiters in progress text.")
             run = Run(folder, state, prompt, args.budget, args.output)
+            if assessment is not None:
+                save(run.attempt / "retry-assessment.json", assessment)
+            if authorization is not None:
+                # Archive the instruction in the NEW attempt: old outcomes,
+                # reviews and failure counts remain immutable and inspectable.
+                save(run.attempt / "user-retry-authorization.json", {
+                    **authorization, "recorded_at": time.time(),
+                    "waived_gate": "two-failure progress percentage",
+                    "waived_progress_attempt_ceiling": state["attempt"] > 4,
+                })
             lock_record(lease, {"active": True, "task_dir": str(folder)})
             old_handlers = {s: signal.signal(s, lambda *_: run.request_stop("cancelled")) for s in (signal.SIGINT, signal.SIGTERM)}
             try:
@@ -798,7 +917,7 @@ def dispatch(args):
             (run.attempt / "changes.diff").write_text(git(cwd, "diff", "--no-ext-diff", "--no-textconv", "--binary", "HEAD"))
             changes = changed(run.before, after)
             save(run.attempt / "attempt-delta.json", delta(run.before, after))
-            outside = [name for name in changes if not in_scope(name, state["allow"])]
+            outside = [name for name in changes if not in_scope(name, [] if alignment else state["allow"])]
             if after["head"] != run.before["head"]:
                 outside.append("<Git HEAD changed>")
             state.update(status=status, after_snapshot_sha256=snapshot_digest(after), elapsed_s=round(time.monotonic() - run.start, 3),
@@ -812,11 +931,13 @@ def dispatch(args):
             elif survivors and status == "awaiting_review":
                 state["status"] = "failed"
                 state["error"] = "Worker left live observed children; controller cleaned them up"
+            if alignment and state["status"] == "awaiting_review":
+                state.update(status="blocked", alignment_ready=True)
             run.persist()
             save(run.attempt / "outcome.json", state)
             lock_record(lease, {"active": bool(remaining), "task_dir": str(folder)})
     print(json.dumps(summary(state, folder), ensure_ascii=False))
-    return 0 if state["status"] == "awaiting_review" else 2
+    return 0 if state["status"] == "awaiting_review" or state.get("alignment_ready") else 2
 
 
 def inspect_task(args):
@@ -831,7 +952,7 @@ def inspect_task(args):
         keys = ("task_id", "backend", "status", "observed_status", "model", "effort", "session_id",
                 "attempt", "attempt_dir", "budget_seconds", "max_turns", "elapsed_s", "last_event",
                 "controller_alive", "worker_alive", "changes", "out_of_scope", "error",
-                "one_shot", "max_attempts", "session_closed", "cleanup")
+                "one_shot", "max_attempts", "session_closed", "cleanup", "alignment_pending", "alignment_ready")
         data = summary(state, folder) if args.summary else {key: state[key] for key in keys if key in state}
         if getattr(args, "verify", False):
             # Raw snapshots stay local; true checks do not accept failed or incorrect work.
@@ -897,6 +1018,8 @@ def inspect_task(args):
                                     else current["files"].get(name) == before["files"].get(name))
                         if not restored:
                             raise RuntimeError(f"Out-of-scope change still unresolved: {name}")
+                    save(Path(state["attempt_dir"]) / "recovered.json", current)
+                    state["recovered_snapshot_sha256"] = snapshot_digest(current)
                     state["status"] = "needs_work"
                 else:
                     state["status"] = "interrupted"
@@ -951,7 +1074,7 @@ def main():
                 p.add_argument("--prompt-file")
             p.add_argument("--budget", type=float, default=300)
             p.add_argument("--output", choices=("summary", "events"), default="summary")
-            p.add_argument("--max-attempts", type=int, help="Total task attempts; default 3, explicit extension allowed")
+            p.add_argument("--max-attempts", type=int, help="Total invocations including handbacks; default 4 with --align, otherwise 3")
             p.add_argument("--max-turns", type=int, help="CodeBuddy turn limit; default 200, retained when omitted, codebuddy only")
             p.add_argument("--effort", choices=EFFORT_CHOICES,
                            help="Reasoning effort; defaults to high and is retained on resume")
@@ -962,11 +1085,15 @@ def main():
             p.add_argument("--model", help="CodeBuddy model ID; dsh uses its opaque ACP option value")
             p.add_argument("--allow", action="append", default=[], help="Allowed relative file or directory ending /; scope check, not sandbox")
             p.add_argument("--one-shot", action="store_true", help="One submission, still reviewed, never resumable")
+            p.add_argument("--align", action="store_true", help="Read-only understanding/plan handback before same-session implementation; default four total attempts")
             p.add_argument("--spec", help="Explicit JSON TaskSpec; compiles goal, scope and limits")
         if name in ("review", "recover", "revise"):
             p.add_argument("--evidence-file", required=True)
         if name in ("resume", "revise"):
-            p.add_argument("--progress-retry-evidence", help="Caller JSON proving >=80%% of previous issues resolved; permits up to four total attempts")
+            retry = p.add_mutually_exclusive_group()
+            retry.add_argument("--retry-assessment", help="Caller diagnosis and adjusted approach bound to the next attempt; permits up to four total attempts")
+            retry.add_argument("--progress-retry-evidence", help="Caller JSON proving >=80%% of previous issues resolved; permits up to four total attempts")
+            retry.add_argument("--user-retry-authorization", help="JSON recording explicit user authorization for this task/session's next attempt; waives only the two-failure progress threshold")
         if name == "cleanup":
             p.add_argument("--purge-raw", action="store_true", help="Delete this task's raw logs; keep reports and reviews")
         if name == "status":

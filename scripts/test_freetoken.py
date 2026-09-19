@@ -495,6 +495,73 @@ raise SystemExit(freetoken.main())
     assert json.loads((double_fail / "attempts/0001/outcome.json").read_text())["status"] == "failed"
     assert not (double_fail / "attempts/0003").exists()
 
+    # An explicit user exception waives only the percentage, for one named
+    # continuation. No invented progress or rewritten failures are required.
+    double_fail = root / "user-authorized-retry"
+    cli(*start_args(double_fail), expected=2)
+    cli("resume", "--task-dir", double_fail, "--prompt-file", prompt, expected=2)
+    authorization_file = root / "user-retry.json"
+    state_path = double_fail / "state.json"
+    state = json.loads(state_path.read_text())
+    authorization = {"task_id": state["task_id"], "session_id": state["session_id"],
+                     "next_attempt": 3, "user_instruction": "Retry once in this same session.",
+                     "instruction_source": "User message in the test conversation"}
+    authorization_file.write_text(json.dumps(authorization))
+    retry = ["resume", "--task-dir", double_fail,
+             "--user-retry-authorization", authorization_file, "--budget", "17"]
+    cli(*retry, expected=2)  # A failed run still needs an independent review.
+    cli("review", "--task-dir", double_fail, "--decision", "needs_work", "--evidence-file", feedback)
+    state = json.loads(state_path.read_text())
+    originals = {p: p.read_bytes() for p in (double_fail / "attempts").glob("*/*.json")}
+    for invalid in ([], {**authorization, "task_id": "another-task"},
+                    {**authorization, "session_id": "another-session"},
+                    {**authorization, "next_attempt": True},
+                    {**authorization, "next_attempt": 4},
+                    {**authorization, "user_instruction": " "},
+                    {**authorization, "instruction_source": None}):
+        authorization_file.write_text(json.dumps(invalid))
+        cli(*retry, expected=2)
+        assert not (double_fail / "attempts/0003").exists()
+    authorization_file.write_text(json.dumps(authorization))
+    cli(*retry, "--progress-retry-evidence", progress_file, expected=2)
+    cli(*retry, "--max-attempts", "2", expected=2)
+    state_path.write_text(json.dumps({**state, "worker": processes()[os.getpid()]}))
+    assert "observed_processes_stopped" in cli(*retry, expected=2).stdout
+    state_path.write_text(json.dumps(state))
+    original_output = (work / "out.txt").read_bytes()
+    (work / "out.txt").write_text("user edited after review")
+    assert "workspace_matches_after" in cli(*retry, expected=2).stdout
+    (work / "out.txt").write_bytes(original_output)
+    cli(*retry)
+    resumed = json.loads(state_path.read_text())
+    assert resumed["attempt"] == 3 and resumed["session_id"] == state["session_id"]
+    assert resumed["model"] == state["model"] and resumed["effort"] == state["effort"]
+    assert resumed["max_attempts"] == state["max_attempts"] == 3
+    assert resumed["budget_seconds"] == 17
+    assert all(p.read_bytes() == content for p, content in originals.items())
+    receipt = json.loads((double_fail / "attempts/0003/user-retry-authorization.json").read_text())
+    assert all(receipt[k] == v for k, v in authorization.items())
+    assert receipt["waived_gate"] == "two-failure progress percentage"
+    assert requires_takeover(double_fail, resumed)  # Failure history still counts.
+    cli("review", "--task-dir", double_fail, "--decision", "needs_work", "--evidence-file", feedback)
+    cli(*retry, "--max-attempts", "4", expected=2)  # Authorization cannot be reused.
+    authorization_file.write_text(json.dumps({**authorization, "next_attempt": 4}))
+    cli(*retry, expected=2)  # Fresh authorization still cannot raise the saved cap.
+    assert not (double_fail / "attempts/0004").exists()
+    cli(*retry, "--max-attempts", "4")
+    cli("review", "--task-dir", double_fail, "--decision", "needs_work", "--evidence-file", feedback)
+    cli(*retry, "--max-attempts", "5", expected=2)  # Fourth authorization is stale.
+    authorization_file.write_text(json.dumps({**authorization, "next_attempt": 5}))
+    cli(*retry, expected=2)  # Explicit limit still applies beyond four.
+    cli(*retry, "--max-attempts", "5")
+    fifth = json.loads(state_path.read_text())
+    assert fifth["attempt"] == 5 and fifth["session_id"] == state["session_id"]
+    assert fifth["max_attempts"] == 5 and fifth["budget_seconds"] == 17
+    receipt5 = json.loads((double_fail / "attempts/0005/user-retry-authorization.json").read_text())
+    assert receipt5["waived_progress_attempt_ceiling"] is True
+    cli("review", "--task-dir", double_fail, "--decision", "needs_work", "--evidence-file", feedback)
+    cli(*retry, "--max-attempts", "6", expected=2)  # No reuse for a sixth attempt.
+
     # A recovered controller crash can lack outcome.json. Its recovery record
     # must survive later handbacks; unreviewed returns do not reset failures.
     history = root / "recovered-history"

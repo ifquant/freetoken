@@ -16,7 +16,7 @@ freetoken 帮助调用者 Codex 委派范围明确的开发工作，同时保留
 
 安装后，在你的项目中输入 `$freetoken` 并描述任务即可。你仍需提前准备可用的 dsh 或 CodeBuddy；安装 skill 不会自动配置这些后端服务。
 
-供执行安装的 Codex 参考：安装根目录 `SKILL.md`、`scripts/`，以及 `references/dispatch-brief.md`、`references/runtime.md`、`references/recovery.md`、`references/measurement.md` 四份操作指引，保持相对路径，命名为 `freetoken`。无需安装其他参考项目和实验产物。
+供执行安装的 Codex 参考：安装根目录 `SKILL.md`、`scripts/`，以及 `references/dispatch-brief.md`、`references/runtime.md`、`references/recovery.md`、`references/measurement.md`、`references/caller-plan-v1.md` 五份操作指引，保持相对路径，命名为 `freetoken`。无需安装其他参考项目和实验产物。
 
 ## 前置条件
 
@@ -41,11 +41,15 @@ freetoken 帮助调用者 Codex 委派范围明确的开发工作，同时保留
 
 skill 的运行规则见 [SKILL.md](SKILL.md)。若当前任务尚未发现新 skill，可直接要求读取该文件；安装后的自动发现仍需在新任务确认。
 
-迁移时，将 `SKILL.md`、`scripts/` 和上述四份操作指引放入 `~/.codex/skills/freetoken/`，保持相对路径。入口和操作指引须一起同步。已有同名项先检查，保留独立修改；不要链接整个含参考 skill 的仓库。
+迁移时，将 `SKILL.md`、`scripts/` 和上述五份操作指引放入 `~/.codex/skills/freetoken/`，保持相对路径。入口和操作指引须一起同步。已有同名项先检查，保留独立修改；不要链接整个含参考 skill 的仓库。
 
 第一轮候选默认输出有界摘要，`--output events` 可恢复诊断事件，`status --summary` 提供紧凑状态；完整事件仍在本地。dsh 全量文本与显式最终报告分离。[调用者计量与待运行校准](docs/008-caller-calibration.md) 默认仅预检，不调用模型。技能/输出变短不是 token 或订阅额度节省证明。
 
+终态验收可用 `status --summary --verify`：程序核对快照、范围、记录的变更列表和已观测进程，只返回摘要，不自动接受结果。检查为假或缺失证据退出 2；仍须审查真实代码并独立运行检查，失败的 worker 也可能通过机械核对。见[派工与独立验收说明](references/runtime.md)。
+
 ## 直接运行
+
+复杂实现默认使用 [caller-plan-v1](references/caller-plan-v1.md)：caller 先读代码并起草执行计划，worker 只读理解并补充，caller 定稿后在同一会话授权实施。正常使用 freetoken 即可，无需指定版本号或手动要求读取 reference。简单机械任务可直接派发。计划编制计入 caller 开销；已经冻结的旧实验保持原流程。
 
 准备一个已有提交的 Git 工作区、写在工作区外的任务说明，以及一个尚不存在的任务状态目录：
 
@@ -91,6 +95,7 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py resume --task-dir <任务
 ```sh
 python3 -B scripts/test_acp_stdio.py
 python3 -B scripts/test_freetoken.py
+python3 -B scripts/test_alignment.py
 python3 -B scripts/test_output.py
 python3 -B experiments/test_codex_meter.py
 ```
@@ -117,7 +122,7 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py cleanup \
   --task-dir <任务目录> --purge-raw
 ```
 
-预算应覆盖一个完整阶段及其检查。CodeBuddy 的 `--max-turns` 已默认 200，续接时保留；墙钟预算单独配置。总尝试次数默认三次，正常决策交回也占次数。连续两次失败默认由 caller 接管：执行错误、超时或 turn-limit、取消/中断、越界，以及语义错误或缺少必需证据导致的 `needs_work`，每次尝试只计一次失败。正常决策交回和未验收的正常返回不清零失败记录。如果 caller 独立验证本轮至少解决了执行前已识别问题的 80%，且剩余工作明确，可以使用[有进展重试例外](references/recovery.md#progress-exception-at-least-80-resolved-at-most-four-total-attempts)，最多共四次尝试（含首次）。每次额外重试都须提供当轮 `--progress-retry-evidence`；仅增大 `--max-attempts` 无效。保留原始证据和有用产物；旧任务仅有文字审核记录时，由 caller 检查历史。不得换任务目录或换执行者绕过接管。
+预算覆盖完整阶段及检查。CodeBuddy 默认 200 turns，续接时保留；墙钟预算单独配置。实质实现任务先由 caller 起草执行计划，使用 `--align` 让执行者结合代码复述、质疑和补充；caller 处理分歧，使用 `resume --prompt-file` 下发完整正式计划，再由原会话实施。这轮沟通也计开销和次数，因此带对齐默认共四次，不带则三次。连续两次失败后必须分析原因、调整方式，使用新的[重试评估](references/recovery.md#diagnosed-retry)记录证据，最多共四次调用；显式较小上限仍有效。旧版 80% 进展证据和用户明确授权扩次保持兼容。正常决策交回不清零失败；不能只增大 `--max-attempts` 或换目录、换执行者绕过限制。
 
 一次性任务只派发一次，不自动返工。CodeBuddy 使用原生 `--no-session-persistence`；dsh 仍可能保留后端历史。本工具的任务结果和验收证据都会保留，不把“一次性”等同于“不留证据”。
 
@@ -142,4 +147,9 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py resume \
 
 `blocked` 不允许无提示续接或 revise；决定文件会保存在原轮次的 `decision.md`。执行者的问题不会被自动审批，原生工具权限的允许也不等同于批准新增范围或设计。此模式保持既有完整权限设置。
 
-再次交接和审核的成本高于直接完成时，可提前接管；连续两次失败后，只有具备独立验证的 80% 问题解决证据才能继续，达到四次总尝试后接管。确认执行者已停止，保留原始证据，检查部分改动后直接实现和验收。caller 补完的结果记作混合完成，不能记成 worker 独立成功。服务故障同样触发重试止损，但单凭服务故障不能判断模型能力。
+修正按根因和可验收结果组织，不按文件拆。测试同时证明正面可用、反面不产生禁止的效果、已有功能不回退，每个限制都要有合法路径仍能成功的对应检查。反复失败时，caller 应理解执行者的能力边界，调整任务大小、补充边界或示例；必要时只接管真正不收敛的部分，不默认重写全部。先确认执行者已停，记录原因、接管范围和保留产物，再独立验收组合结果。caller 补完记为混合完成，沟通、执行、审核与接管开销分别留证。服务故障不能单独证明模型能力不足；不得静默扩大重试。
+### TaskSpec（实验入口）
+
+可用 `scripts/freetoken.py start --spec spec.json` 提交最小契约；必须显式
+提供 `goal`、`scope.write`、`acceptance.commands` 和 `limits`。检查命令来自
+契约，不从 worker 文本推断。旧 `start/resume/revise` 入口保持可用。
