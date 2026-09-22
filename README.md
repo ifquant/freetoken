@@ -2,9 +2,9 @@
 
 **English** | [简体中文](README.cn.md)
 
-Codex plans, makes decisions, and independently verifies results. Local CodeBuddy or dsh agents execute the work. freetoken consists of a skill and two Python standard-library scripts, with no background service.
+Codex plans, makes decisions, and independently verifies results. Local CodeBuddy or dsh agents execute the work. freetoken consists of a skill and a Python standard-library runner, with no background service.
 
-freetoken helps a calling Codex delegate well-defined development work while retaining responsibility for the outcome. The caller supplies the objective, boundaries, and a plan when needed; the worker executes, returns evidence or decision requests, and receives corrections in the same session. Tasks that are too complex or repeatedly stall should be completed by the caller directly.
+freetoken helps a calling Codex delegate well-defined development work while retaining responsibility for the outcome. The caller supplies the objective, boundaries, and a plan when needed; the worker executes, returns evidence or decision requests, and receives corrections in the same session. For complex goals, resolve the coupled decisions first and look for substantial stable execution packages; retain only work that cannot be usefully separated.
 
 It provides progress inspection, per-attempt time budgets, cancellation, review and correction loops, one-shot tasks, and local log cleanup. It uses your existing backend access; it does not install a model, provide credentials, or guarantee free tokens or lower costs.
 
@@ -48,7 +48,10 @@ See [SKILL.md](SKILL.md) for the operating rules. If the skill is not yet availa
 Default for substantial implementation: [caller-plan-v1](references/caller-plan-v1.md).
 Caller drafts, worker reviews read-only, then caller issues the final execution
 plan in the same session. Invoke freetoken normally; no version keyword or manual
-reference selection is needed. Mechanical work can use the lighter direct path.
+reference selection is needed. Choose [full or lightweight](references/caller-plan-v1.md#protocol-selection)
+before dispatch. Substantial implementation defaults to full for bounded same-session
+review corrections; stable single-handback work can use lightweight, even when long.
+Mechanical full-mode work can omit alignment with a stated reason; lightweight keeps it.
 Include caller planning in usage measurement. Frozen old experiments stay unchanged.
 
 Prepare a Git workspace with at least one commit, a task description outside that workspace, and a task-state directory that does not yet exist:
@@ -60,7 +63,7 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py start \
   --backend codebuddy --model deepseek-v4.1-flash \
   --effort high \
   --prompt-file /absolute/path/to/task.md \
-  --allow src/log.py --budget 300
+  --allow src/log.py --align --budget 300
 ```
 
 Repeat `--allow` for additional paths. Directory entries end in `/`; omitting the option declares a read-only task, and `.` allows the entire workspace. This is a post-execution scope check, not a permission sandbox. The runner uses full permissions: process-local `bypassPermissions` for CodeBuddy, and the local ACP profile with one-time permission requests accepted for dsh. It does not change global configuration.
@@ -70,6 +73,8 @@ Use `--backend dsh` to select dsh. By default, it uses the current ACP model. To
 Reasoning effort is runner-owned and defaults to `high`. Use `--effort max` for quality-first work; the setting is persisted and reused by `resume`/`revise` unless overridden. dsh applies it through the ACP `reasoning_effort`/`thought_level` option, while CodeBuddy receives its native `--effort` flag.
 
 `start`, `resume`, and `revise` run in the foreground until the attempt ends. If the host tool returns a running-process handle, continue waiting on that handle. An observation timeout is not a failed dispatch; do not submit another `start`.
+
+Prefer completion notifications or the longest wait allowed by both the tools and applicable responsiveness/progress instructions; use 300-500 seconds only when permitted. Apply those constraints to outer exec/cell waits as well as the terminal. A tool maximum does not override a shorter instruction-level limit. Do not alternate short sleeps and polls or routinely read raw JSONL. Read the bounded summary and final report at handback, then perform independent checks. Failure, timeout or evidence of abnormal stalling permits targeted diagnostics. Runner timeout/cancellation checks are unchanged; see [low-overhead observation](references/runtime.md#low-overhead-observation).
 
 ```sh
 python3 ~/.codex/skills/freetoken/scripts/freetoken.py status --task-dir <task-dir>
@@ -92,7 +97,9 @@ Cancellation and timeout can leave partial edits. Inspect status when process st
 
 ## Verification and evidence
 
-First-round candidate: dispatch defaults to bounded summaries (`--output events` restores diagnostic events); `status --summary` is compact. Detailed events remain local. dsh stream text is separate from explicitly framed final reports. The optional [caller meter and pending calibration](docs/008-caller-calibration.md) defaults to preflight, not model execution. Shorter skill/output does not prove token or subscription savings.
+Dispatch returns the complete final report in `report_text` (`--output events` additionally exposes diagnostic events). `status --summary` stays compact without report text or excerpts; the saved report remains available by path. Detailed events remain local. dsh stream text is separate from explicitly framed final reports. The optional [caller meter and pending calibration](docs/008-caller-calibration.md) defaults to preflight, not model execution. Shorter skill/output does not prove token or subscription savings.
+
+`report_warnings` flags an explicit completion claim with declared gaps or missing declarations. This prompts caller review without discarding the report or changing runner status. Missing required behavior or evidence is not optional hardening; a green suite does not establish a transition the test never exercised.
 
 After a terminal attempt, `status --summary --verify` checks snapshots, scope, recorded change lists and observed processes without printing raw records or accepting the result. False checks or missing evidence return 2. Still inspect actual code and run independent checks; failed workers can pass mechanical checks. See [dispatch and independent review](references/runtime.md).
 
@@ -112,7 +119,7 @@ Historical design records: [discussion](docs/001-discussion.md), [dispatch lifec
 
 ## Review, corrections, one-shot tasks, and cleanup
 
-By default, Codex continues the cycle within the current user request: dispatch → independent review → specific corrections → review again. It does not stop merely because the worker submitted a result. Codex supplies clear constraints, failing examples, and expected outputs, and dispatches ordinary corrections without asking the user to say “continue.” Missing decisions or dependencies are reported as blockers.
+In full mode, Codex continues within the current user request and saved limits: dispatch → independent review → specific corrections to the same session → review again. It does not stop merely because the worker submitted a result. Codex supplies clear constraints, failing examples, and expected outputs, and dispatches ordinary corrections without asking the user to say “continue.” Missing decisions or dependencies are reported as blockers. Lightweight permits only alignment plus one execution; its rejected handback uses the bounded caller repair policy, not another backend invocation.
 
 ```sh
 # Record review evidence and immediately send corrections to the same session.
@@ -139,7 +146,22 @@ See the [second usage review](experiments/runs/2026-09-11-usage-review-02/record
 
 ## The caller owns correctness; the worker executes
 
-The caller, usually Codex, first decides whether delegation is worthwhile. The task must fit the selected backend/model's demonstrated capability and be clear enough to specify and verify. Work directly when decisions are tightly coupled, the core design is unresolved, context is difficult to transfer, or dispatch and review would cost more than doing the work. For a complex task, delegate only a well-defined part when appropriate.
+The caller first reads the relevant current implementation, call/data paths, shared
+state and tests; a short request or file list is not enough to choose implementation
+boundaries. Read to the affected dependencies, not mechanically through the entire
+repository. Then separate consequential decisions from execution. A complex project
+may contain long simple packages: an agreed API/schema change across consumers and
+tests, or a fixed validation matrix with revision-bound evidence. Many files and
+ordered steps do not require more design autonomy. Do not limit workers to baseline
+tests while automatically keeping every implementation with the planner.
+
+Choose the implementation owner before substantive coding. Keep genuinely
+inseparable changing design and tiny uneconomic handoffs local. Otherwise prefer
+one coherent backend outcome including implementation, self-tests and local repair.
+Retain the executor's context for allowed full-mode review corrections; diagnosing
+an issue does not automatically transfer ownership to the reviewer. Reassess when
+design stabilizes or an independent package begins, not after every edit. No fixed
+delegation ratio or artificial batching is required.
 
 Split substantial work into independently acceptable stages with observable outcomes, dependencies and handback artifacts. Before dispatch, freeze the [acceptance contract](references/dispatch-brief.md): outcome, scope/exclusions, invariants, initial state and first real use, required environment/access/data, exact checks with expected results, evidence and decision-return conditions. Required target execution cannot be replaced by skips, mocks or another environment. Complex assignments also include an ordered plan. The worker delivers a candidate and evidence; the caller independently decides acceptance.
 

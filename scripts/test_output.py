@@ -1,4 +1,4 @@
-"""Offline bounded output and dsh report-framing integration checks."""
+"""Offline compact status, complete handback and dsh report-framing checks."""
 
 import json
 import os
@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 
-from freetoken import final_report, processes, report_excerpt, report_signals, snapshot, summary
+from freetoken import ACTIVE, final_report, processes, report_signals, snapshot, summary
 from task_spec import load as load_spec
 
 
@@ -17,9 +17,10 @@ assert final_report([OPEN + "a", "b" + CLOSE]) == ("invalid", None)
 assert final_report([OPEN + "complete" + CLOSE, "later: the check failed"]) == ("invalid", None)
 assert final_report([OPEN + "complete" + CLOSE + "later: the check failed"]) == ("invalid", None)
 for text in (OPEN + CLOSE, OPEN + "a" + CLOSE + OPEN + "b" + CLOSE,
-             OPEN + "x" * 6001 + CLOSE, OPEN + " " * 6000 + "a" + CLOSE,
-             CLOSE + "bad" + OPEN, OPEN + "中" * 2001 + CLOSE):
+             CLOSE + "bad" + OPEN):
     assert final_report([text]) == ("invalid", None)
+for body in ("x" * 6001, " " * 6000 + "a", "中" * 2001):
+    assert final_report([OPEN + body + CLOSE]) == ("framed", body.strip())
 assert final_report(["no explicit final report"]) == ("unstructured", None)
 state = {"changes": ["x" * 2000] * 10000, "out_of_scope": ["y" * 2000] * 10000,
          "error": "e" * 100000, "model": "m" * 100000, "session_id": "s" * 100000}
@@ -28,27 +29,50 @@ assert len(json.dumps(compact)) < 5000
 assert compact["changes_count"] == 10000 and len(compact["changes_sample"]) == 5
 assert compact["independent_verification"] is None
 assert compact["report_bytes"] is None
-assert compact["report_excerpt"] is None
-assert compact["report_truncated"] is False and compact["report_requires_full_read"] is True
+assert compact["report_text"] is None and compact["report_requires_full_read"] is True
+assert compact["report_warnings"] == []
 assert compact["report_signals"] == {"unrun_checks": "unknown", "decision_required": "unknown", "pending_work": "unknown", "clarification_required": "unknown"}
 
-with tempfile.TemporaryDirectory(prefix="freetoken-excerpt-") as directory:
+with tempfile.TemporaryDirectory(prefix="freetoken-handback-") as directory:
     report = Path(directory) / "report.md"
-    report.write_text("short report")
-    assert report_excerpt(report) == "short report"
-    for text, head, tail in (("HEAD-" + "x" * 3000 + "-TAIL", "HEAD-", "-TAIL"),
-                             ("开头" + "中" * 1000 + "结尾", "开头", "结尾")):
+    for text in ("short report", "HEAD-" + "x" * 9000 + "-TAIL", "开头" + "中" * 3000 + "结尾"):
         report.write_text(text)
-        excerpt = report_excerpt(report)
-        assert len(excerpt.encode("utf-8")) <= 1400
-        assert "...[report truncated]..." in excerpt
-        assert excerpt.startswith(head) and excerpt.endswith(tail)
-        compact = summary({"attempt_dir": str(report.parent)}, "/task")
-        assert compact["report_excerpt"] == excerpt and len(json.dumps(compact)) < 5000
-        assert compact["report_truncated"] is (len(text.encode("utf-8")) > 1400)
-        assert compact["report_requires_full_read"] is compact["report_truncated"]
+        state = {"attempt_dir": str(report.parent), "status": "awaiting_review", "report_status": "framed"}
+        compact = summary(state, "/task")
+        assert compact["report_text"] is None and len(json.dumps(compact)) < 5000
+        assert compact["report_bytes"] == len(text.encode("utf-8"))
+        assert compact["report_requires_full_read"] is True
+        delivered = summary(state, "/task", include_report=True)
+        assert delivered["report_text"] == text and delivered["report_requires_full_read"] is False
+        for active in ACTIVE:
+            running = summary({**state, "status": active}, "/task", include_report=True)
+            assert running["report_text"] is None and running["report_bytes"] is None
+            assert set(running["report_signals"].values()) == {"unknown"}
+            assert running["report_warnings"] == []
     report.write_text("UNRUN_CHECKS: none\nDECISION_REQUIRED: choose A\nPENDING_WORK: docs\nCLARIFICATION_REQUIRED: yes")
     assert report_signals(report) == {"unrun_checks": "none_declared", "decision_required": "present", "pending_work": "present", "clarification_required": "present"}
+    declarations = "UNRUN_CHECKS: none\nDECISION_REQUIRED: none\nPENDING_WORK: none\nCLARIFICATION_REQUIRED: no"
+    for text, warnings in (
+        ("status: complete\n" + declarations, []),
+        ("status: complete\n" + declarations.replace("PENDING_WORK: none", "PENDING_WORK: required delayed-write proof"),
+         ["completion_claim_with_declared_gaps"]),
+        ("STATUS: complete (caller acceptance pending)\n" + declarations.replace("UNRUN_CHECKS: none", "UNRUN_CHECKS: required integration"),
+         ["completion_claim_with_declared_gaps"]),
+        ("status: complete\n" + declarations.replace("DECISION_REQUIRED: none", "DECISION_REQUIRED: choose contract"),
+         ["completion_claim_with_declared_gaps"]),
+        ("status: complete", ["completion_claim_without_required_declarations"]),
+        ("status: needs_work\n" + declarations.replace("PENDING_WORK: none", "PENDING_WORK: required proof"), []),
+        ("status: blocked\n" + declarations.replace("DECISION_REQUIRED: none", "DECISION_REQUIRED: authorize next stage"), []),
+    ):
+        report.write_text(text)
+        for include_report in (False, True):
+            delivered = summary(state, "/task", include_report=include_report)
+            assert delivered["report_warnings"] == warnings, (text, delivered)
+            assert delivered["status"] == "awaiting_review"
+            assert delivered["independent_verification"] is None
+            assert delivered["report_text"] == (text if include_report else None)
+        for active in ACTIVE:
+            assert summary({**state, "status": active}, "/task")["report_warnings"] == []
 
 RUNNER = Path(__file__).with_name("freetoken.py")
 with tempfile.TemporaryDirectory(prefix="freetoken-output-") as directory:
@@ -79,18 +103,24 @@ for line in sys.stdin:
             {'id':'reasoning_effort','currentValue':request['params']['value']}]}
     elif method == 'session/prompt':
         prompt = request['params']['prompt'][0]['text']
-        assert '<freetoken-report>' in prompt and '6000' in prompt and '1200' in prompt and '1400' in prompt
+        assert '<freetoken-report>' in prompt
         # Verify the transmitted protocol matches the declarations parsed by status.
         for declaration in ('UNRUN_CHECKS:', 'DECISION_REQUIRED:', 'PENDING_WORK:', 'CLARIFICATION_REQUIRED:'):
             assert declaration in prompt
-        mode = prompt.splitlines()[0]
+        mode = 'oversized' if 'oversized' in prompt.splitlines() else prompt.splitlines()[0]
         text('private progress, not the final delivery\\n', 'progress')
         for i in range(100):
             emit({'jsonrpc':'2.0','method':'session/update','params':{'sessionId':'offline','update':{
                 'sessionUpdate':'tool_call_update','toolCallId':str(i),'title':'large private tool title','status':'completed'}}})
         if mode == 'missing': text('ordinary unframed text')
         elif mode == 'multiple': text('<freetoken-report>a</freetoken-report><freetoken-report>b</freetoken-report>')
-        elif mode == 'oversized': text('<freetoken-report>' + 'x'*6001 + '</freetoken-report>')
+        elif mode == 'oversized':
+            text('<freetoken-report>HEAD-' + '中'*1500 + '\\nDECISION_REQUIRED: choose A\\n' +
+                 '中'*1500 + '-TAIL</freetoken-report>')
+        elif mode == 'incomplete':
+            text('<freetoken-report>status: complete\\nUNRUN_CHECKS: required recovery test\\n'
+                 'DECISION_REQUIRED: none\\nPENDING_WORK: required proof\\n'
+                 'CLARIFICATION_REQUIRED: no</freetoken-report>')
         elif mode == 'split-id':
             text('<freetoken-report>a','one'); text('b</freetoken-report>','two')
         elif mode == 'interleaved':
@@ -113,8 +143,8 @@ for line in sys.stdin:
         return result.stdout
 
     for mode, status in (("valid", "framed"), ("interleaved", "framed"), ("missing", "unstructured"),
-                         ("multiple", "invalid"), ("oversized", "invalid"), ("split-id", "invalid"),
-                         ("late-message", "invalid"), ("late-same", "invalid"), ("failed", "missing")):
+                         ("multiple", "invalid"), ("oversized", "framed"), ("split-id", "invalid"),
+                         ("late-message", "invalid"), ("late-same", "invalid"), ("incomplete", "framed"), ("failed", "missing")):
         task = root / mode
         prompt.write_text(mode + "\n")
         stdout = cli("start", "--task-dir", task, "--cwd", work, "--backend", "dsh", "--model", "fake",
@@ -131,28 +161,51 @@ for line in sys.stdin:
             assert [chunk["msgId"] for chunk in chunks[1:]] == ["one", "two"]
         assert len((attempt / "events.jsonl").read_text().splitlines()) >= 100
         if status == "framed":
-            assert (attempt / "report.md").read_text() == "done"
+            expected_report = ("HEAD-" + "中" * 1500 + "\nDECISION_REQUIRED: choose A\n" +
+                               "中" * 1500 + "-TAIL") if mode == "oversized" else "done"
+            if mode == "incomplete":
+                expected_report = ("status: complete\nUNRUN_CHECKS: required recovery test\n"
+                                   "DECISION_REQUIRED: none\nPENDING_WORK: required proof\n"
+                                   "CLARIFICATION_REQUIRED: no")
+                assert result["report_warnings"] == ["completion_claim_with_declared_gaps"]
+                assert result["status"] == "awaiting_review"
+            assert (attempt / "report.md").read_text() == expected_report
             assert (attempt / "attempt-delta.json").is_file()
-            assert result["report_bytes"] == 4
-            assert result["report_excerpt"] == "done"
+            assert result["report_bytes"] == len(expected_report.encode("utf-8"))
+            assert result["report_text"] == expected_report
+            assert result["report_requires_full_read"] is False
+            if mode == "oversized":
+                assert "choose A" in result["report_text"]
+                assert result["report_signals"]["decision_required"] == "present"
+                assert result["status"] == "awaiting_review"
         else:
             assert not (attempt / "report.md").exists() and result["report"] is None
             assert result["report_bytes"] is None
-            assert result["report_excerpt"] is None
+            assert result["report_text"] is None and result["report_requires_full_read"] is True
         compact = cli("status", "--task-dir", task, "--summary")
         assert len(compact.splitlines()) == 1 and json.loads(compact)["report_status"] == status
+        assert json.loads(compact)["report_text"] is None
+        assert json.loads(compact)["report_requires_full_read"] is True
+        if mode == "incomplete":
+            assert json.loads(compact)["report_warnings"] == ["completion_claim_with_declared_gaps"]
+            assert json.loads(compact)["status"] == "awaiting_review"
+        if mode == "oversized":
+            assert len(compact.encode("utf-8")) < 5000
+            assert json.loads(compact)["report_signals"]["decision_required"] == "present"
     # The shared alignment gate also preserves the dsh ACP session and framing.
     aligned = root / "aligned-dsh"
-    prompt.write_text("valid\n")
+    prompt.write_text("oversized\n")
     planned = json.loads(cli("start", "--task-dir", aligned, "--cwd", work, "--backend", "dsh",
                              "--model", "fake", "--executable", fake, "--prompt-file", prompt,
                              "--budget", "5", "--align"))
     assert planned["status"] == "blocked" and planned["alignment_ready"]
     assert planned["report_status"] == "framed"
+    assert len(planned["report_text"].encode("utf-8")) > 6000 and "choose A" in planned["report_text"]
     cli("resume", "--task-dir", aligned, expected=2)
     implemented = json.loads(cli("resume", "--task-dir", aligned, "--prompt-file", prompt))
     assert implemented["session_id"] == planned["session_id"] == "offline"
     assert implemented["status"] == "awaiting_review" and not implemented["alignment_pending"]
+    assert implemented["report_text"] == planned["report_text"]
 
     task = root / "valid"
     prompt.write_text("valid\n")
@@ -162,6 +215,7 @@ for line in sys.stdin:
     evidence.write_text("Independent fake check, request correction within unchanged scope.")
     stdout = cli("revise", "--task-dir", task, "--evidence-file", evidence)
     assert len(stdout.splitlines()) == 1 and json.loads(stdout)["attempt"] == 3
+    assert json.loads(stdout)["report_text"] == "done"
 
     # Verify is read-only and mechanical: passing checks must not accept a failed worker.
     task = root / "evidence"
@@ -246,4 +300,4 @@ for line in sys.stdin:
     (attempt / "after.json").unlink()
     assert "error" in verify(2)
 
-print("PASS: bounded summaries, framing, lifecycle and read-only mechanical evidence checks")
+print("PASS: compact status, complete handbacks, framing, lifecycle and mechanical evidence checks")

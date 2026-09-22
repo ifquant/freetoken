@@ -2,9 +2,9 @@
 
 [English](README.md) | **简体中文**
 
-Codex 负责规划、判断和独立验收；本机 CodeBuddy / dsh 负责执行。交付形态为一个 skill、两个 Python 标准库运行脚本，无常驻服务。
+Codex 负责规划、判断和独立验收；本机 CodeBuddy / dsh 负责执行。交付形态为一个 skill 和 Python 标准库运行器，无常驻服务。
 
-freetoken 帮助调用者 Codex 委派范围明确的开发工作，同时保留对最终结果的责任。调用者提供目标、边界和必要的计划；执行者完成工作、返回证据或待决策问题，并在原会话接收修正要求。过于复杂或反复无法推进的任务，应由调用者直接完成。
+freetoken 帮助调用者 Codex 委派范围明确的开发工作，同时保留对最终结果的责任。调用者提供目标、边界和必要的计划；执行者完成工作、返回证据或待决策问题，并在原会话接收修正要求。复杂目标先解决耦合决策，再寻找较长、稳定、可独立验收的执行包；真正无法拆开的部分才由调用者直接完成。
 
 项目提供进度查询、每轮时间预算、取消、审核返工、一次性任务及本地日志清理。它使用你已有的后端服务，不负责安装模型、提供凭据，也不保证免费 token 或降低费用。
 
@@ -43,13 +43,13 @@ skill 的运行规则见 [SKILL.md](SKILL.md)。若当前任务尚未发现新 s
 
 迁移时，将 `SKILL.md`、`scripts/` 和上述五份操作指引放入 `~/.codex/skills/freetoken/`，保持相对路径。入口和操作指引须一起同步。已有同名项先检查，保留独立修改；不要链接整个含参考 skill 的仓库。
 
-第一轮候选默认输出有界摘要，`--output events` 可恢复诊断事件，`status --summary` 提供紧凑状态；完整事件仍在本地。dsh 全量文本与显式最终报告分离。[调用者计量与待运行校准](docs/008-caller-calibration.md) 默认仅预检，不调用模型。技能/输出变短不是 token 或订阅额度节省证明。
+派发交回结果时通过 `report_text` 返回完整最终报告，`--output events` 额外输出诊断事件。`status --summary` 仅提供紧凑状态，不附报告正文或首尾摘录；完整报告仍可按路径读取。完整事件保留在本地，dsh 全量文本与显式最终报告分离。[调用者计量与待运行校准](docs/008-caller-calibration.md) 默认仅预检，不调用模型。技能/输出变短不是 token 或订阅额度节省证明。
 
 终态验收可用 `status --summary --verify`：程序核对快照、范围、记录的变更列表和已观测进程，只返回摘要，不自动接受结果。检查为假或缺失证据退出 2；仍须审查真实代码并独立运行检查，失败的 worker 也可能通过机械核对。见[派工与独立验收说明](references/runtime.md)。
 
 ## 直接运行
 
-复杂实现默认使用 [caller-plan-v1](references/caller-plan-v1.md)：caller 先读代码并起草执行计划，worker 只读理解并补充，caller 定稿后在同一会话授权实施。正常使用 freetoken 即可，无需指定版本号或手动要求读取 reference。简单机械任务可直接派发。计划编制计入 caller 开销；已经冻结的旧实验保持原流程。
+复杂实现默认使用 [caller-plan-v1](references/caller-plan-v1.md)：caller 先读代码并起草执行计划，worker 只读理解并补充，caller 定稿后在同一会话授权实施。正常使用 freetoken 即可，无需指定版本号或手动要求读取 reference。派发前选择 [full 或 lightweight](references/caller-plan-v1.md#protocol-selection)：实质实现默认 full，保留原会话内有上限的审核返修；稳定且预计一次执行交付的任务可选 lightweight，即使流程很长。full 下机械任务可说明理由后略过对齐，lightweight 保留对齐。计划编制计入 caller 开销；已经冻结的旧实验保持原流程。
 
 准备一个已有提交的 Git 工作区、写在工作区外的任务说明，以及一个尚不存在的任务状态目录：
 
@@ -60,7 +60,7 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py start \
   --backend codebuddy --model deepseek-v4.1-flash \
   --effort high \
   --prompt-file /absolute/path/to/task.md \
-  --allow src/log.py --budget 300
+  --allow src/log.py --align --budget 300
 ```
 
 `--allow` 可重复；目录以 `/` 结尾，省略表示只读，`.` 表示整个工作区。它是事后检查范围，并非权限沙箱。沿用本机完整权限：CodeBuddy 使用进程级 `bypassPermissions`，dsh 使用本机 ACP profile 并接受一次性权限请求；不修改全局配置。
@@ -70,6 +70,8 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py start \
 推理 effort 由 runner 管理，默认是 `high`。质量优先的任务可传 `--effort max`；该设置会持久化，并由 `resume` / `revise` 继承，除非再次覆盖。dsh 通过 ACP 的 `reasoning_effort` / `thought_level` 选项设置，CodeBuddy 使用原生 `--effort` 参数。
 
 `start` / `resume` / `revise` 在前台运行至本轮结束。宿主工具返回运行句柄后继续等待该句柄；一次观察超时不是派工失败，不要重新 start。
+
+优先使用完成通知，或工具与响应／进度指令共同允许的最长等待；只有全部条件允许时才采用 300–500 秒。内层终端和外层 exec/cell 都要遵守这些限制；工具允许的最大值不能覆盖指令规定的更短上限。不要交替短 sleep 和轮询，也不要常态读取原始 JSONL。交回结果后读取有界摘要和最终报告，再集中进行独立检查；仅在失败、超时或有异常停滞证据时读取必要日志片段。运行器内部超时、取消和进程检查保持不变，见[低开销观察规则](references/runtime.md#low-overhead-observation)。
 
 ```sh
 python3 ~/.codex/skills/freetoken/scripts/freetoken.py status --task-dir <任务目录>
@@ -81,6 +83,8 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py resume --task-dir <任务
 ```
 
 `awaiting_review` 只表示工人正常交卷。Codex 应检查报告、实际改动并独立运行验收，再记录 `accepted` 或 `needs_work`。返回码 0 表示进入待验收；返回码 2 表示未正常交卷或命令被拒绝，具体原因看状态。预算按本轮墙钟计时；到期开始取消，停止与清理另需宽限时间，不能当作严格实时截止。
+
+`report_warnings` 提示“明确声称完成，却声明存在缺口或缺少必要声明”，供 caller 审查，不丢弃报告、不改变运行器状态。缺少必需行为或证据不能改称可选加固；测试通过不代表执行过它没有覆盖的状态转换。
 
 每个任务保存准确会话 ID；每轮单独保存提示、事件、报告、usage、前后哈希、diff 和 outcome。`changes.diff` 相对 HEAD，可能含已有修改，应结合前后快照识别本轮变化。新增未跟踪文件在快照中有哈希，内容需直接读取。原始日志留在任务目录的 `attempts/*/raw/`，可能含敏感工作内容，不应发布。
 
@@ -106,7 +110,7 @@ python3 -B experiments/test_codex_meter.py
 
 ## 审核、返工、一次性任务和清理
 
-默认由 Codex 在同一轮用户请求里持续完成「派工 → 独立审核 → 具体返工 → 再审核」，不在工人交卷时就停止。Codex 应给出明确约束、失败样例与期望结果；发现普通实现错误后直接修正派工，不再要求用户说“继续”。遇到缺少决定或依赖时才说明阻塞。
+full 模式下，Codex 在原任务次数上限内持续完成「派工 → 独立审核 → 原会话具体返工 → 再审核」，不在工人交卷时就停止。Codex 应给出明确约束、失败样例与期望结果；发现普通实现错误后直接修正派工，不再要求用户说“继续”。遇到缺少决定或依赖时才说明阻塞。lightweight 只允许对齐加一次实施，最终拒收后走有界 caller 修复，不再调用后端实施。
 
 ```sh
 # 把审核证据保存下来，并立即派回原会话修正
@@ -132,7 +136,9 @@ python3 ~/.codex/skills/freetoken/scripts/freetoken.py cleanup \
 
 ## 调用者负责结果，执行者负责执行
 
-调用者（通常是 Codex）先判断是否值得派工：任务必须符合所选后端/模型已经表现出的能力，且能清楚描述和验收。需要强耦合判断、核心设计仍不明确、上下文难以传递或派工审核比自己做还费事时，由调用者直接完成；复杂任务也可只把其中明确的一小部分派出去。
+调用者先阅读当前相关实现、调用与数据路径、共享状态及测试，沿实际耦合读到足以判断边界；不能仅凭任务简述或文件列表拆分，也不要求机械通读全仓库。确认理解后，再区分关键决策和执行量。复杂项目可以拆出长流程简单任务，例如按已冻结接口完成多个调用方、测试和本地修复，或运行固定验证矩阵并收集绑定版本的证据。文件多、步骤多不等于需要更多设计自主权；不应只让 worker 跑基线，而由规划者自动包办所有实现。
+
+在实质编码前选择实现负责人。真正无法分离、持续变化的设计，以及不值得交接的小修，可以由 caller 完成。其余工作优先组成包含实现、自测和局部修复的完整执行包。full 模式在已有上限内让原执行者接收审核意见，保留其上下文；审核者看懂或诊断出问题，不自动获得实现权。在设计稳定、独立任务开始或能力证据变化时重新判断，不逐个编辑重新派发。不设委派比例，也不为凑工作量拼接无关杂务。
 
 按可独立验收的实质阶段拆分任务，明确可观察结果、依赖和交接产物。派工前冻结[验收合同](references/dispatch-brief.md)：完成条件、范围与排除项、不变量、初始状态和首次真实使用、必需环境/权限/数据、具体检查命令与预期结果、交付证据和交回决定的条件。必须在目标环境执行的检查，不能用跳过、模拟或其他环境替代。复杂任务再给出有顺序的计划。执行者交付候选和证据，caller 独立决定是否验收。
 

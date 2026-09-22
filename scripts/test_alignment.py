@@ -14,10 +14,12 @@ args = sys.argv[1:]; prompt = args[-1]
 sid = args[args.index('--resume')+1] if '--resume' in args else args[args.index('--session-id')+1]
 print(json.dumps(dict(type='system', subtype='init', session_id=sid, model='fake')), flush=True)
 failed = 'FAIL_MARKER' in prompt
+report = ('DECISION_REQUIRED: authorize integration\\nPENDING_WORK: integration\\nUNRUN_CHECKS: full regression\\n'
+          'CLARIFICATION_REQUIRED: no') if prompt.startswith('CHECKPOINT') else 'Understanding; next plan; impact; positive/negative/regression.'
 if 'WRITE_IN_PLAN' in prompt or (not prompt.startswith('ALIGNMENT ONLY:') and not failed):
     Path('out.txt').write_text('result')
 print(json.dumps(dict(type='result', subtype='error_during_execution' if failed else 'success',
-    is_error=failed, session_id=sid, result='Understanding; next plan; impact; positive/negative/regression.')), flush=True)
+    is_error=failed, session_id=sid, result=report)), flush=True)
 '''
 
 
@@ -98,6 +100,51 @@ with tempfile.TemporaryDirectory(prefix="freetoken-align-") as directory:
     assessment_file.write_text(json.dumps({**assessment, "next_attempt": 5}))
     cli("resume", "--task-dir", task, "--retry-assessment", assessment_file, "--max-attempts", 8, expected=2)
 
+    # A checkpoint uses the existing review/resume path, not automatic acceptance
+    # or a fresh invocation budget. This checks mechanics, not model compliance.
+    checkpoint = root / "checkpoint"
+    prompt.write_text("CHECKPOINT: implement the proof only; defer integration.")
+    start(checkpoint, "--max-attempts", 2)
+    proof = state(checkpoint)
+    assert proof["status"] == "awaiting_review"
+    proof_dir = checkpoint / "attempts/0001"
+    proof_report = (proof_dir / "report.md").read_bytes()
+    proof_snapshot = (proof_dir / "after.json").read_bytes()
+    assert b"PENDING_WORK: integration" in proof_report
+    review.write_text("Focused proof verified; full integration remains unproven.")
+    cli("review", "--task-dir", checkpoint, "--decision", "blocked", "--evidence-file", review)
+    assert state(checkpoint)["status"] == "blocked"
+    prompt.write_text("Authorize integration; preserve the contract and run full regression.")
+    cli("resume", "--task-dir", checkpoint, "--prompt-file", prompt)
+    integrated = state(checkpoint)
+    assert integrated["session_id"] == proof["session_id"]
+    assert integrated["attempt"] == integrated["max_attempts"] == 2
+    assert integrated["status"] == "awaiting_review"
+    assert (proof_dir / "report.md").read_bytes() == proof_report
+    assert (proof_dir / "after.json").read_bytes() == proof_snapshot
+    assert (proof_dir / "decision.md").read_text() == prompt.read_text()
+    cli("resume", "--task-dir", checkpoint, "--prompt-file", prompt, expected=2)
+
+    # Lightweight uses existing flags: alignment plus one implementation, with
+    # no third invocation after independent rejection. No real backend is used.
+    lightweight = root / "lightweight"
+    (work / "out.txt").unlink()
+    prompt.write_text("Inspect the bounded implementation plan.")
+    start(lightweight, "--align", "--max-attempts", 2)
+    aligned = state(lightweight)
+    assert aligned["alignment_ready"] and not (work / "out.txt").exists()
+    prompt.write_text("Final plan: implement and verify the bounded outcome.")
+    cli("resume", "--task-dir", lightweight, "--prompt-file", prompt)
+    implemented = state(lightweight)
+    assert implemented["session_id"] == aligned["session_id"]
+    assert implemented["attempt"] == implemented["max_attempts"] == 2
+    reject(lightweight)
+    rejected_state = (lightweight / "state.json").read_bytes()
+    result = cli("resume", "--task-dir", lightweight, expected=2)
+    assert "Attempt limit reached" in json.loads(result.stdout)["error"]
+    assert (lightweight / "state.json").read_bytes() == rejected_state
+    assert not (lightweight / "attempts/0003").exists()
+
     start(root / "invalid-one-shot", "--align", "--one-shot", expected=2)
     start(root / "invalid-limit", "--align", "--max-attempts", 1, expected=2)
     assert not (root / "invalid-one-shot").exists()
@@ -162,4 +209,4 @@ with tempfile.TemporaryDirectory(prefix="freetoken-align-") as directory:
     cli("resume", "--task-dir", recovered, "--prompt-file", prompt, "--retry-assessment", assessment_file)
     assert state(recovered)["status"] == "awaiting_review"
 
-print("PASS: alignment, confirmation, unchanged-workspace checks, diagnosed retry, caps and legacy opt-in boundaries")
+print("PASS: alignment, confirmation, checkpoint continuation, unchanged-workspace checks, diagnosed retry, caps and legacy opt-in boundaries")

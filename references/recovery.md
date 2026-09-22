@@ -3,6 +3,18 @@
 Read the section for the current state. Related corrections reuse the existing
 session; permission approval and silence do not authorize scope or design changes.
 
+For a [lightweight run](caller-plan-v1.md#lightweight-protocol), preserve evidence,
+settle writers and record review, but do not use the correction/retry paths below
+to start another implementation invocation. Leave escalation to the caller policy.
+The existing retry mechanisms remain available for full-mode runs. Choose full
+before dispatch when independent-review corrections are expected; a review finding
+under a still-valid contract normally goes back to that executor within the cap.
+A caller diagnosis or an ordinary defect does not by itself justify takeover.
+For a transfer, name the concrete capability, contract or budget reason and move
+only the blocked scope plus necessary dependencies. Never reopen failed work under
+an apparently new outcome; a completed baseline and a distinct implementation
+package, however, are not retries of the same task.
+
 ## Review and continue
 
 ```sh
@@ -24,8 +36,12 @@ The first failed attempt may receive a normal retry. After two failures the call
 must diagnose the cause, rather than repeat feedback or automatically take over
 everything. Distinguish understanding, scope, design, contract, environment and
 implementation. Provide missing boundaries/examples, narrow an independently
-acceptable outcome, or take over just the nonconverging part. Never lower
+acceptable outcome, or, only when authorized, take over just the nonconverging part. Never lower
 acceptance to obtain a pass. A service fault alone does not prove model inability.
+Use [task-fit calibration](caller-plan-v1.md#task-fit-and-calibration) to change
+decision ownership or the next package when evidence shows a capability mismatch;
+longer feedback alone is not an adjustment. Worker-only or frozen protocols may
+require an operator decision instead of takeover or repartitioning.
 
 Execution errors, timeout/turn-limit exhaustion, cancellation/interruption, scope
 violations and `needs_work` reviews count once per attempt. Decision-only handbacks
@@ -109,6 +125,9 @@ binding and evidence, not whether the quoted user instruction is authentic.
 
 ### Progress exception: at least 80% resolved, at most four total attempts
 
+This is an alternative to diagnosed retry or explicit user authorization above,
+not an additional percentage requirement for those paths.
+
 After two failures, allow the next retry when the caller independently verifies
 that the latest failed attempt resolved at least 80% of the issues identified
 before that attempt and the remaining work is bounded. Apply the same check
@@ -149,6 +168,8 @@ The caller owns the truth and significance of the issue closures.
 
 ## Caller takeover
 
+First check authorization: a worker-only instruction forbids caller implementation.
+No retry failure grants permission to change worker, model, route or ownership.
 Preserve outcomes and useful partial work, record `needs_work` before editing
 when the review gate permits it, and confirm stopped writers. Record the cause,
 exact takeover scope, retained worker work and remaining checks. Complete only
@@ -156,6 +177,10 @@ the necessary part, then independently check both caller changes and their
 composition with worker work. Record hybrid
 completion rather than accepting caller-fixed work as worker-only success.
 An unavailable required environment/access/data remains an external blocker.
+After the blocked judgment is resolved, use the entrypoint's
+[execution reassessment](../SKILL.md#reassess-execution-after-decisions-settle)
+before absorbing a substantial stable remainder. This changes ownership only
+within the original budget, route constraints and repair limits.
 
 ## Blocked decision
 

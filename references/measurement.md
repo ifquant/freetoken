@@ -19,3 +19,9 @@ TaskSpec validation is structural evidence only. Missing fields, unknown
 commands, or changed workspace state remain incomplete/unknown; they are not
 zero-cost or successful measurements. Keep caller and worker accounting
 separate.
+
+When reporting delegation share, distinguish backend invocations (including
+alignment), independently accepted outcomes, implementation contributed and work
+completed by the caller. Baseline tests are validation, not feature implementation;
+a task count is not a weighted share of effort. Without complete comparable usage
+or labor attribution, report counts and scope, not an invented overall percentage.

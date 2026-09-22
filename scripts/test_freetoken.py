@@ -75,7 +75,10 @@ with tempfile.TemporaryDirectory(prefix="freetoken-test-") as directory:
 
     task = root / "success"
     prompt.write_text("success")
-    cli(*start_args(task))
+    delivered = json.loads(cli(*start_args(task)).stdout)
+    assert delivered["report_status"] == "provider_final" and delivered["report_text"] == "done"
+    assert delivered["report_requires_full_read"] is False
+    assert json.loads(cli("status", "--task-dir", task, "--summary").stdout)["report_text"] is None
     state = json.loads((task / "state.json").read_text())
     assert state["status"] == "awaiting_review" and state["session_confirmed"]
     assert (work / "keep.txt").read_text() == "existing dirty work"

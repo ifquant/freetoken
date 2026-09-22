@@ -28,11 +28,7 @@ DEFAULT_MAX_TURNS = 200
 DEFAULT_EFFORT = "high"
 EFFORT_CHOICES = ("high", "max")
 NON_SUCCESS_TERMINAL = {"failed", "timed_out", "cancelled", "interrupted"}
-REPORT_LIMIT = 6000
-REPORT_ROUTINE_TARGET = 1200
-REPORT_DECISION_TARGET = 1400
 REPORT_OPEN, REPORT_CLOSE = "<freetoken-report>", "</freetoken-report>"
-REPORT_TRUNCATED = "\n...[report truncated]...\n"
 
 
 def valid_budget(value):
@@ -222,23 +218,6 @@ def result_detail(result, limit=400):
     return "; ".join(parts)
 
 
-def excerpt_text(text, limit=REPORT_DECISION_TARGET):
-    """Return a deterministic UTF-8-safe head+tail excerpt of report text."""
-    data = text.encode("utf-8")
-    if len(data) <= limit:
-        return text
-    marker = REPORT_TRUNCATED.encode("utf-8")
-    room = max(0, limit - len(marker))
-    head = room // 2
-    tail = room - head
-    return (data[:head].decode("utf-8", errors="ignore") + REPORT_TRUNCATED +
-            data[-tail:].decode("utf-8", errors="ignore"))
-
-
-def report_excerpt(path, limit=REPORT_DECISION_TARGET):
-    return excerpt_text(Path(path).read_text(errors="replace"), limit)
-
-
 def signals_text(text):
     """Parse only explicit worker declarations; absence remains unknown."""
     result = {}
@@ -256,8 +235,20 @@ def report_signals(path):
     return signals_text(Path(path).read_text(errors="replace"))
 
 
-def summary(state, folder):
-    """Bounded caller exposure; details and exact long paths remain in state.json."""
+def report_warnings(text, signals):
+    """Flag contradictory claims without inferring acceptance from free-form prose."""
+    if text is None or not re.search(r"(?im)^[ \t]*status[ \t]*:[ \t]*complete\b", text):
+        return []
+    warnings = []
+    if "present" in signals.values():
+        warnings.append("completion_claim_with_declared_gaps")
+    if "unknown" in signals.values():
+        warnings.append("completion_claim_without_required_declarations")
+    return warnings
+
+
+def summary(state, folder, *, include_report=False):
+    """Keep status compact; deliver the complete report only at terminal handback."""
     def short(value, limit=240):
         if value is None:
             return None
@@ -283,16 +274,18 @@ def summary(state, folder):
         path = attempt / filename if attempt else None
         result[key] = short(path) if path and path.is_file() else None
     report = attempt / "report.md" if attempt else None
-    text = report.read_text(errors="replace") if report and report.is_file() else None
+    # A report may appear before the writer settles. Never expose it as a handback.
+    text = (report.read_text(errors="replace")
+            if state.get("status") not in ACTIVE and report and report.is_file() else None)
     result["report_bytes"] = len(text.encode("utf-8")) if text is not None else None
-    result["report_excerpt"] = excerpt_text(text) if text is not None else None
-    result["report_truncated"] = bool(text is not None and len(text.encode("utf-8")) > REPORT_DECISION_TARGET)
+    result["report_text"] = text if include_report else None
     result["report_requires_full_read"] = bool(
-        text is None or result["report_truncated"]
+        text is None or not include_report
         or result["report_status"] not in {"framed", "provider_final"})
     result["report_signals"] = signals_text(text) if text is not None else {
         "unrun_checks": "unknown", "decision_required": "unknown", "pending_work": "unknown",
         "clarification_required": "unknown"}
+    result["report_warnings"] = report_warnings(text, result["report_signals"])
     result["spec"] = bool(state.get("spec_path"))
     receipt = attempt / "verification.json" if attempt else None
     result["verification_receipt"] = short(receipt) if receipt and receipt.is_file() else None
@@ -374,7 +367,7 @@ def continuation_checks(state):
 
 
 def final_report(messages):
-    """Framing is a worker convention, not ACP end_turn or caller acceptance."""
+    """Validate final framing, not length or semantic acceptance."""
     messages = list(messages)
     opens = sum(text.count(REPORT_OPEN) for text in messages)
     closes = sum(text.count(REPORT_CLOSE) for text in messages)
@@ -387,7 +380,7 @@ def final_report(messages):
         if match:
             report = match.group(1).strip()
             if (index == len(messages) - 1 and match.end() == len(text.rstrip())
-                    and report and len(match.group(1).encode("utf-8")) <= REPORT_LIMIT):
+                    and report):
                 return "framed", report
     return "invalid", None
 
@@ -849,8 +842,8 @@ def dispatch(args):
             if alignment:
                 prompt = ("ALIGNMENT ONLY: the task below is context for later implementation, not authorization "
                           "to edit now. Read relevant code without changing files or running mutating checks. "
-                          "Briefly report your understanding, root cause or investigation hypothesis, next plan, "
-                          "affected callers/shared state, positive/negative/regression checks and material questions. "
+                          "Report evidence-backed differences from the draft: assumptions, conflicts, affected "
+                          "callers, decisive positive/negative checks and material questions; do not repeat the plan. "
                           "Do not implement. Return control for one caller confirmation or adjustment; do not ask "
                           "the user for routine approval.\n\nTask context:\n" + prompt)
             prompt += (f"\n\nWorker contract: the only implementation workspace is {cwd}. "
@@ -861,11 +854,21 @@ def dispatch(args):
                        "The caller owns scope, decisions and acceptance. Resolve routine gaps from authoritative "
                        "documents, code and tests; preserve explicit requirements. Make low-risk reversible "
                        "implementation choices locally. A missing template heading alone is not a blocker. "
-                       "During alignment, stop after the read-only plan. Otherwise complete the root-cause outcome "
-                       "through implementation and required checks. Consider affected callers, shared state and "
-                       "neighboring workflows. Test both what must work and what must be rejected or preserved; "
-                       "pair each safety restriction with a legitimate path that must still work. Run focused "
-                       "checks during changes and relevant integration/full regression before handback. Use current check "
+                       "During alignment, stop after read-only inspection. Otherwise aim to complete and verify the "
+                       "whole authorized outcome or current stage; stop at an agreed checkpoint before dependent work. "
+                       "For shared behavior, map affected entry points to the common rule and positive/negative "
+                       "checks, including state-changing rollback, retry, recovery and cleanup; these obey the same "
+                       "ownership and cancellation rules as the primary operation. Repair the shared cause and "
+                       "verify each affected path reaches it. For risky changes, "
+                       "exercise decisive cases before broad implementation that reject plausible wrong behavior, paired with "
+                       "the actual legitimate path, not an easier substitute. Derive assertions from requirements, "
+                       "not current output. For timing/state tests, prove the prerequisite transition, control the "
+                       "specific operation and observe boundary effects. Where late completion matters, hold the real "
+                       "operation, perform timeout/recovery/replacement, then release that exact old operation and "
+                       "check final state and external effects. An immediate fake failure, seeded data or helper "
+                       "success cannot prove this sequence. Execute these cases before broad regression. "
+                       "Run focused checks during changes and stage-relevant regression before handback; final "
+                       "integration still requires full acceptance. Use current check "
                        "results; rerun affected checks after changes, failures or unresolved concerns. "
                        "Once implementation is authorized, add or update the agreed tests, fix failures caused by "
                        "your changes and retest within scope and budget before handback; do not defer first-pass "
@@ -873,21 +876,34 @@ def dispatch(args):
                        "If unable to pass, report attempted fixes and failed/unrun checks as incomplete, distinguishing "
                        "pre-existing failures from introduced regressions. Self-test precedes, but does not replace, "
                        "the caller's independent acceptance. "
-                       "If evidence remains missing or contradictory and a choice would materially change behavior, "
-                       "scope, interfaces, acceptance or an irreversible result, stop the affected work and return "
-                       "the decision to the caller. Complete independent in-scope work when useful and safe, then "
-                       "end the attempt. Report unavailable required environments/checks instead of weakening acceptance. "
-                       "Delivery: summarize changes, check results with evidence paths, remaining work/risks and "
-                       "any implementation assumptions. For a caller decision, also provide QUESTION, EVIDENCE, "
-                       "OPTIONS, RECOMMENDATION and BLOCKED_SCOPE. Every final delivery must contain one line each: "
+                       "Investigate ordinary conflicts within scope and budget first. A disproved assumption or "
+                       "requirement/test mismatch alone is not a reason to stop: repair implementation or demonstrably "
+                       "stale tests when this preserves agreed behavior and acceptance. Never weaken validation, "
+                       "required guards or the actual success path to obtain a pass. Return critical conflicts early "
+                       "only when authorized evidence cannot resolve them without a caller decision on requirements, "
+                       "scope, public contracts, acceptance or irreversible effects. Stop dependent work and provide "
+                       "minimal evidence and the decision needed. Complete useful independent in-scope work when safe "
+                       "and it does not materially delay that critical decision. Ordinary failures with an in-contract "
+                       "repair remain yours to fix. Report unavailable required "
+                       "environments/checks instead of weakening acceptance. Return early with attempted repairs "
+                       "and evidence if repeated critical failures leave no defensible next approach. "
+                       "Delivery: lead with blockers, decisions and missing mandatory behavior/evidence, then changes, "
+                       "actual check results with evidence paths and assumptions. For a caller decision, provide QUESTION, EVIDENCE, "
+                       "OPTIONS, RECOMMENDATION and BLOCKED_SCOPE. Declare status: complete only when the authorized "
+                       "outcome or explicitly scoped stage is implemented and its required checks pass; otherwise use "
+                       "status: needs_work, or status: blocked for a blocking decision/prerequisite. A completed stage "
+                       "does not complete the whole task. Missing mandatory behavior or proof is not optional hardening. "
+                       "Put genuinely optional follow-ups in a separate section. Every final delivery must contain one line each: "
                        "UNRUN_CHECKS: <none or list>; DECISION_REQUIRED: <none or question>; "
                        "PENDING_WORK: <none or list>; CLARIFICATION_REQUIRED: <yes or no>. "
-                       f"Aim for {REPORT_ROUTINE_TARGET} UTF-8 bytes for routine delivery or "
-                       f"{REPORT_DECISION_TARGET} for a decision; these are soft targets, not reasons to omit "
-                       "essential evidence. Keep transcripts and longer details in local logs and link them.")
+                       "Unresolved material conflicts require a non-none DECISION_REQUIRED; include unfinished "
+                       "required behavior in PENDING_WORK and unexecuted checks in UNRUN_CHECKS, regardless of test counts. "
+                       "Be concise but complete: preserve blockers, decisions, failed/unrun checks and "
+                       "essential evidence without a fixed length target. Keep raw transcripts and test logs "
+                       "in local files and link them instead of pasting them into the delivery.")
             if state["backend"] == "dsh":
                 prompt += (f"\nReturn exactly one final delivery in a single {REPORT_OPEN}...{REPORT_CLOSE} block "
-                           f"inside one assistant message, at most {REPORT_LIMIT} UTF-8 bytes. "
+                           "inside one assistant message. Length alone does not invalidate the report. "
                            "Put all delivery fields and declarations inside that block. Do not put any text "
                            "after the closing delimiter, and do not use these delimiters in progress text.")
             run = Run(folder, state, prompt, args.budget, args.output)
@@ -936,7 +952,7 @@ def dispatch(args):
             run.persist()
             save(run.attempt / "outcome.json", state)
             lock_record(lease, {"active": bool(remaining), "task_dir": str(folder)})
-    print(json.dumps(summary(state, folder), ensure_ascii=False))
+    print(json.dumps(summary(state, folder, include_report=True), ensure_ascii=False))
     return 0 if state["status"] == "awaiting_review" or state.get("alignment_ready") else 2
 
 
